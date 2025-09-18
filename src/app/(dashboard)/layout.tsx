@@ -14,10 +14,9 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarRail,
-  SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { Home } from "lucide-react"
+import { sidebar as sidebarItems } from "@/const/sidebar"
 
 export const metadata: Metadata = {
   title: "Tableau de bord",
@@ -32,31 +31,36 @@ export default function DashboardLayout({
     <SidebarProvider
       className="min-h-svh"
       style={{
-        // Set a green background for the sidebar and ensure readable foreground
-        "--sidebar": "oklch(0.62 0.18 150)",
-        "--sidebar-foreground": "oklch(0.985 0 0)",
+        "--sidebar": "var(--primary)",
+        "--sidebar-foreground": "var(--primary-foreground)",
+        "--sidebar-accent": "color-mix(in oklab, var(--primary) 92%, black 8%)",
+        "--sidebar-accent-foreground": "var(--primary-foreground)",
+        "--sidebar-border": "color-mix(in oklab, var(--primary) 85%, black 15%)",
+        "--sidebar-ring": "color-mix(in oklab, var(--primary) 70%, white 30%)",
       } as React.CSSProperties}
     >
-      <Sidebar className="border-r" collapsible="offcanvas">
+      <Sidebar variant="floating"  collapsible="offcanvas">
         <SidebarHeader>
           <div className="px-2 py-1 text-sm font-semibold">Jethings Admin</div>
         </SidebarHeader>
-        <SidebarSeparator />
-        <SidebarContent>
+    
+        <SidebarContent >
           <SidebarGroup>
             <SidebarGroupLabel>Navigation</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <Link href="/" passHref legacyBehavior>
-                    <SidebarMenuButton asChild isActive>
-                      <a>
-                        <Home />
-                        <span>Accueil</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </Link>
-                </SidebarMenuItem>
+                {sidebarItems.map((item) => (
+                  <SidebarMenuItem key={item.href}>
+                    <Link href={item.href} passHref legacyBehavior>
+                      <SidebarMenuButton asChild>
+                        <a>
+                          <item.icon />
+                          <span>{item.label}</span>
+                        </a>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -66,9 +70,9 @@ export default function DashboardLayout({
       </Sidebar>
 
       <SidebarInset>
-        <header className="flex h-14 items-center gap-2 border-b px-4">
+        <header className="flex h-14 items-center gap-2  px-4">
           <SidebarTrigger />
-          <div className="text-sm text-muted-foreground">Tableau de bord</div>
+          <div className="text-sm text-muted-foreground">Jethings Admin</div>
         </header>
         <div className="flex-1 p-6">
           {children}
