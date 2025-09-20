@@ -22,6 +22,6 @@ export const sidebar: SidebarItem[] = [
   {
     label: "Gestion des rôles",
     icon: UserCog,
-    href: "/roles",
+    href: "/admins",
   },
 ]

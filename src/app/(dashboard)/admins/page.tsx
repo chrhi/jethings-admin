@@ -3,38 +3,54 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DataTable } from "@/features/users/table"
-import { columns } from "@/features/users/columns"
-import { useUsers } from "@/hooks/use-users"
-import { UserFilters } from "@/features/users/types"
-import { Plus, RefreshCw, Shield } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { RoleTable, RoleStats, CreateRoleForm } from "@/features/roles"
+import { useRoles } from "@/hooks/use-roles"
+import { RoleFilters, CreateRoleData } from "@/features/roles/types"
+import { Plus, RefreshCw, Search, Filter } from "lucide-react"
 
-export default function AdminsPage() {
-  const [filters, setFilters] = useState<UserFilters>({
+export default function RoleManagementPage() {
+  const [filters, setFilters] = useState<RoleFilters>({
     page: 1,
     limit: 10,
     sortBy: 'createdAt',
     sortOrder: 'desc',
-    roles: ['admin', 'super_admin']
+    search: '',
+    isActive: undefined,
   })
+  const [showCreateForm, setShowCreateForm] = useState(false)
 
-  const { users, loading, error, pagination, refetch } = useUsers(filters)
+  const { roles, loading, error, pagination, createRole, refetch } = useRoles(filters)
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }))
   }
 
-  const handleLimitChange = (limit: number) => {
-    setFilters(prev => ({ ...prev, limit, page: 1 }))
+  const handleSearchChange = (search: string) => {
+    setFilters(prev => ({ ...prev, search, page: 1 }))
+  }
+
+  const handleActiveFilterChange = (isActive: boolean | undefined) => {
+    setFilters(prev => ({ ...prev, isActive, page: 1 }))
   }
 
   const handleRefresh = () => {
     refetch()
   }
 
-  const handleCreateAdmin = () => {
-    // TODO: Implement create admin modal
-    console.log('Create admin')
+  const handleCreateRole = async (data: CreateRoleData) => {
+    try {
+      await createRole(data)
+      setShowCreateForm(false)
+    } catch (error) {
+      console.error('Failed to create role:', error)
+    }
+  }
+
+  const handleCancelCreate = () => {
+    setShowCreateForm(false)
   }
 
   return (
@@ -42,9 +58,9 @@ export default function AdminsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Admin Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Role Management</h1>
           <p className="text-muted-foreground">
-            Manage administrator accounts and permissions
+            Create and manage user roles with specific permissions
           </p>
         </div>
         <div className="flex items-center space-x-2">
@@ -52,60 +68,104 @@ export default function AdminsPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-          <Button onClick={handleCreateAdmin}>
+          <Button onClick={() => setShowCreateForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Add Admin
+            Create Role
           </Button>
         </div>
       </div>
 
-      {/* Admin Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Admins</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(user => user.roles.includes('admin')).length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Regular administrators
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Super Admins</CardTitle>
-            <Shield className="h-4 w-4 text-destructive" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(user => user.roles.includes('super_admin')).length}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Super administrators
-            </p>
-          </CardContent>
-        </Card>
+      {/* Create Role Form */}
+      {showCreateForm && (
+        <CreateRoleForm
+          onSubmit={handleCreateRole}
+          onCancel={handleCancelCreate}
+          loading={loading}
+        />
+      )}
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Admins</CardTitle>
-            <Shield className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {users.filter(user => user.isActive).length}
+      {/* Role Stats */}
+      <RoleStats roles={roles} />
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filters
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="search">Search Roles</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search by name or description..."
+                  value={filters.search || ''}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Currently active
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+            
+            <div className="space-y-2">
+              <Label>Status Filter</Label>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="active-only"
+                    checked={filters.isActive === true}
+                    onCheckedChange={(checked) => 
+                      handleActiveFilterChange(checked ? true : undefined)
+                    }
+                  />
+                  <Label htmlFor="active-only">Active only</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="inactive-only"
+                    checked={filters.isActive === false}
+                    onCheckedChange={(checked) => 
+                      handleActiveFilterChange(checked ? false : undefined)
+                    }
+                  />
+                  <Label htmlFor="inactive-only">Inactive only</Label>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Sort By</Label>
+              <div className="flex space-x-2">
+                <Button
+                  variant={filters.sortBy === 'name' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'name', page: 1 }))}
+                >
+                  Name
+                </Button>
+                <Button
+                  variant={filters.sortBy === 'createdAt' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'createdAt', page: 1 }))}
+                >
+                  Created
+                </Button>
+                <Button
+                  variant={filters.sortBy === 'userCount' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'userCount', page: 1 }))}
+                >
+                  Users
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Error State */}
       {error && (
@@ -121,15 +181,14 @@ export default function AdminsPage() {
         </Card>
       )}
 
-      {/* Admins Table */}
+      {/* Roles Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Administrators</CardTitle>
+          <CardTitle>Roles</CardTitle>
         </CardHeader>
         <CardContent>
-          <DataTable 
-            columns={columns} 
-            data={users} 
+          <RoleTable 
+            data={roles} 
             loading={loading}
           />
           

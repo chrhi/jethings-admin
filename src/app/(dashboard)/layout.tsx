@@ -1,4 +1,3 @@
-import type { Metadata } from "next"
 import {
   Sidebar,
   SidebarFooter,
@@ -34,7 +33,7 @@ export default function DashboardLayout({
         >
           <SidebarHeader>
             <div className="px-2 py-1 text-sm font-semibold w-full flex items-center justify-center">
-              <Image src="/logo.png" alt="Jethings Admin" width={60} height={60} />
+              <Image src="/logo.png" alt="Jethings Admin" width={100} height={100} />
             </div>
           </SidebarHeader>
       
@@ -44,17 +43,20 @@ export default function DashboardLayout({
           <SidebarRail />
         </Sidebar>
 
-        <SidebarInset >
-          <header className="flex h-14 items-center gap-2 px-4 justify-between">
+        <div className="flex flex-col w-full">
+          <header className="sticky top-0 z-50 flex h-14 items-center gap-2 px-4 justify-between bg-background border-b">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
-              <div className="text-sm text-muted-foreground">Jethings Admin</div>
             </div>
           </header>
-          <div className="flex-1 p-6">
-            {children}
-          </div>
-        </SidebarInset>
+          <SidebarInset className="flex-1">
+            <div className="p-6">
+              {children}
+            </div>
+          </SidebarInset>
+        </div>
       </SidebarProvider>
   )
 }
+
+

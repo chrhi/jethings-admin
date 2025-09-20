@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, VariantProps } from "class-variance-authority"
-import { PanelLeftIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight, PanelLeftIcon } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -253,29 +253,36 @@ function Sidebar({
   )
 }
 
+
 function SidebarTrigger({
   className,
   onClick,
   ...props
-}: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+}: React.ComponentProps<"div">) {
+  const { toggleSidebar, state } = useSidebar()
 
   return (
-    <Button
+    <div
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
-      variant="ghost"
-      size="icon"
-      className={cn("size-7", className)}
+      className={cn(
+        "w-10 h-8 bg-primary rounded-lg cursor-pointer select-none",
+        "active:translate-y-2 active:[box-shadow:0_0px_0_0_#1b6ff8,0_0px_0_0_#1b70f841]",
+        "active:border-b-[0px]",
+        "transition-all duration-150 [box-shadow:0_4px_0_0_#1b6ff8,0_6px_0_0_#1b70f841]",
+        "border-b-[1px] border-primary/80",
+        className
+      )}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
-    </Button>
+      <span className="flex flex-col justify-center items-center h-full text-white font-bold text-sm">
+        {state === "collapsed" ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+      </span>
+    </div>
   )
 }
 

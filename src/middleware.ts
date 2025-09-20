@@ -3,27 +3,21 @@ import type { NextRequest } from 'next/server';
 
 
 const protectedRoutes = ['/admins', '/users'];
-const authRoutes = ['/signin'];
+const authRoutes = ['/signin' , '/signin/forget-password' , '/signin/forget-password/step2'];
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
-  // Skip middleware for root path to avoid redirect loops
-  if (pathname === '/') {
-    return NextResponse.next();
-  }
-  
-  // Check if the current path is a protected route
+  // Check if it's a protected route (including root path)
   const isProtectedRoute = protectedRoutes.some(route => 
     pathname.startsWith(route)
-  );
+  ) || pathname === '/';
   
-  // Check if the current path is an auth route
+  // Check if it's an auth route
   const isAuthRoute = authRoutes.some(route => 
     pathname.startsWith(route)
   );
 
-  // Get the access token from cookies
   const accessToken = request.cookies.get('accessToken')?.value;
 
   // If accessing a protected route without a token, redirect to signin
@@ -33,7 +27,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(signInUrl);
   }
 
-  // If accessing auth routes with a valid token, redirect to main dashboard
+  // If accessing an auth route with a token, redirect to dashboard
   if (isAuthRoute && accessToken) {
     const redirectUrl = request.nextUrl.searchParams.get('redirect') || '/';
     return NextResponse.redirect(new URL(redirectUrl, request.url));
