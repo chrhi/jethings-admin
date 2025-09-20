@@ -11,10 +11,6 @@ import {
 import { SidebarContent } from "@/layout/sidebar-content"
 import Image from "next/image"
 
-export const metadata: Metadata = {
-  title: "Tableau de bord",
-}
-
 export default function DashboardLayout({
   children,
 }: {
