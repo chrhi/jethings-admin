@@ -1,3 +1,4 @@
+import MaxWidthWrapper from "@/components/max-with-wrapper";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,19 +13,11 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/20">
-      <div className="container mx-auto px-4">
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="w-full max-w-md">
-            <div className="mb-8 text-center">
-              <h1 className="text-3xl font-bold text-primary">Jethings Admin</h1>
-              <p className="text-muted-foreground mt-2">
-                Gérez votre plateforme Jethings
-              </p>
-            </div>
-            {children}
-          </div>
+      <MaxWidthWrapper className="flex w-full h-full items-center justify-center"> 
+        <div className="w-full max-w-md pt-20">
+          {children}
         </div>
-      </div>
+      </MaxWidthWrapper>
     </div>
   );
 }

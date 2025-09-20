@@ -10,18 +10,18 @@ export type SidebarItem = {
 
 export const sidebar: SidebarItem[] = [
   {
-    label: "Home",
+    label: "Tableau de bord",
     icon: Home,
     href: "/",
   },
   {
-    label: "Users Management",
+    label: "Gestion des utilisateurs",
     icon: Users,
     href: "/users",
   },
   {
-    label: "Admins Management",
+    label: "Gestion des rôles",
     icon: UserCog,
-    href: "/admins",
+    href: "/roles",
   },
 ]

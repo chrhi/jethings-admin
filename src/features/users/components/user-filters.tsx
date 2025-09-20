@@ -124,16 +124,16 @@ export function UserFiltersComponent({ filters, onFiltersChange, onReset }: User
             <div className="space-y-2">
               <Label>Email Verification</Label>
               <Select
-                value={filters.isEmailVerified?.toString() || ''}
+                value={filters.isEmailVerified?.toString() || 'all'}
                 onValueChange={(value) => 
-                  handleFilterChange('isEmailVerified', value === '' ? undefined : value === 'true')
+                  handleFilterChange('isEmailVerified', value === 'all' ? undefined : value === 'true')
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All verification status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="true">Verified</SelectItem>
                   <SelectItem value="false">Unverified</SelectItem>
                 </SelectContent>
@@ -142,16 +142,16 @@ export function UserFiltersComponent({ filters, onFiltersChange, onReset }: User
             <div className="space-y-2">
               <Label>Account Status</Label>
               <Select
-                value={filters.isActive?.toString() || ''}
+                value={filters.isActive?.toString() || 'all'}
                 onValueChange={(value) => 
-                  handleFilterChange('isActive', value === '' ? undefined : value === 'true')
+                  handleFilterChange('isActive', value === 'all' ? undefined : value === 'true')
                 }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All account status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All</SelectItem>
+                  <SelectItem value="all">All</SelectItem>
                   <SelectItem value="true">Active</SelectItem>
                   <SelectItem value="false">Inactive</SelectItem>
                 </SelectContent>

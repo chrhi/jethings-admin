@@ -2,11 +2,11 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent} from "@/components/ui/card"
 import { DataTable } from "@/features/users/table"
 import { columns } from "@/features/users/columns"
 import { UserFiltersComponent } from "@/features/users/components/user-filters"
-import { UserStatsComponent, RoleDistributionStats } from "@/features/users/components/user-stats"
+import { UserStatsComponent} from "@/features/users/components/user-stats"
 import { PaginationComponent } from "@/features/users/components/pagination"
 import { useUsers, useUserStats } from "@/hooks/use-users"
 import { UserFilters } from "@/features/users/types"
@@ -49,12 +49,12 @@ export default function UsersPage() {
   }
 
   const handleExport = () => {
-    // TODO: Implement export functionality
+    
     console.log('Export users')
   }
 
   const handleCreateUser = () => {
-    // TODO: Implement create user modal
+  
     console.log('Create user')
   }
 
@@ -68,6 +68,8 @@ export default function UsersPage() {
             Manage and monitor user accounts
           </p>
         </div>
+        
+      
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
@@ -87,8 +89,6 @@ export default function UsersPage() {
       {/* Stats */}
       <UserStatsComponent stats={stats} loading={statsLoading} />
 
-      {/* Role Distribution */}
-      <RoleDistributionStats stats={stats} />
 
       {/* Filters */}
       <UserFiltersComponent
@@ -99,7 +99,7 @@ export default function UsersPage() {
 
       {/* Error State */}
       {error && (
-        <Card className="border-destructive">
+        <Card className="border-destructive ">
           <CardContent className="pt-6">
             <div className="text-center">
               <p className="text-destructive mb-4">{error}</p>
@@ -112,11 +112,9 @@ export default function UsersPage() {
       )}
 
       {/* Users Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Users</CardTitle>
-        </CardHeader>
-        <CardContent>
+      <Card className="border-none p-0">
+    
+        <CardContent className="p-0">
           <DataTable 
             columns={columns} 
             data={users} 
