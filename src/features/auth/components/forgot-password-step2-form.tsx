@@ -7,6 +7,7 @@ import { z } from "zod";
 import { ArrowLeft, Loader2, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,9 +41,12 @@ export function ForgotPasswordStep2Form() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email");
+  const { verifyPasswordReset, requestPasswordReset } = useAuth();
 
   const {
     register,
@@ -74,26 +78,30 @@ export function ForgotPasswordStep2Form() {
 
   const onSubmit = async (data: ForgotPasswordStep2FormData) => {
     setIsLoading(true);
+    setError(null);
     try {
-      // TODO: Implement actual password reset logic
-      console.log("Reset password data:", { ...data, email });
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
-      
-      // Navigate back to signin with success message
-      router.push("/signin?reset=success");
+      await verifyPasswordReset({
+        otp: data.verificationCode,
+        newPassword: data.newPassword,
+      });
+      setSuccess(true);
+      // Navigate back to signin with success message after a short delay
+      setTimeout(() => {
+        router.push("/signin?reset=success");
+      }, 2000);
     } catch (error) {
       console.error("Reset password error:", error);
+      setError(error instanceof Error ? error.message : 'Une erreur est survenue');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleResendCode = async () => {
-    if (resendTimer > 0) return;
+    if (resendTimer > 0 || !email) return;
     
     try {
-      // TODO: Implement resend code logic
-      console.log("Resending code to:", email);
+      await requestPasswordReset({ email });
       setResendTimer(60);
       const interval = setInterval(() => {
         setResendTimer((prev) => {
@@ -106,6 +114,7 @@ export function ForgotPasswordStep2Form() {
       }, 1000);
     } catch (error) {
       console.error("Resend code error:", error);
+      setError(error instanceof Error ? error.message : 'Erreur lors du renvoi du code');
     }
   };
 
@@ -181,6 +190,18 @@ export function ForgotPasswordStep2Form() {
             </Button>
           </div>
 
+          {error && (
+            <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+              Mot de passe réinitialisé avec succès ! Redirection en cours...
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="newPassword">Nouveau mot de passe</Label>
             <div className="relative">
@@ -239,9 +260,9 @@ export function ForgotPasswordStep2Form() {
             )}
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading || success}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Réinitialiser le mot de passe
+            {success ? "Réinitialisé avec succès" : "Réinitialiser le mot de passe"}
           </Button>
         </form>
 

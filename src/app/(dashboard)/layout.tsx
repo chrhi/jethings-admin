@@ -17,6 +17,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { sidebar as sidebarItems } from "@/const/sidebar"
+import { LogoutButton } from "@/components/auth/logout-button"
 
 export const metadata: Metadata = {
   title: "Tableau de bord",
@@ -29,56 +30,64 @@ export default function DashboardLayout({
 }) {
   return (
     <SidebarProvider
-      className="min-h-svh"
-      style={{
-        "--sidebar": "var(--primary)",
-        "--sidebar-foreground": "var(--primary-foreground)",
-        "--sidebar-accent": "color-mix(in oklab, var(--primary) 92%, black 8%)",
-        "--sidebar-accent-foreground": "var(--primary-foreground)",
-        "--sidebar-border": "color-mix(in oklab, var(--primary) 85%, black 15%)",
-        "--sidebar-ring": "color-mix(in oklab, var(--primary) 70%, white 30%)",
-      } as React.CSSProperties}
-    >
-      <Sidebar variant="floating"  collapsible="offcanvas">
-        <SidebarHeader>
-          <div className="px-2 py-1 text-sm font-semibold">Jethings Admin</div>
-        </SidebarHeader>
-    
-        <SidebarContent >
-          <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {sidebarItems.map((item) => (
-                  <SidebarMenuItem key={item.href}>
-                    <Link href={item.href} passHref legacyBehavior>
+   
+        style={{
+          "--sidebar": "var(--primary)",
+          "--sidebar-foreground": "var(--primary-foreground)",
+          "--sidebar-accent": "color-mix(in oklab, var(--primary) 92%, black 8%)",
+          "--sidebar-accent-foreground": "var(--primary-foreground)",
+          "--sidebar-border": "color-mix(in oklab, var(--primary) 85%, black 15%)",
+          "--sidebar-ring": "color-mix(in oklab, var(--primary) 70%, white 30%)",
+        } as React.CSSProperties}
+      >
+        <Sidebar 
+          variant="sidebar" 
+          collapsible="offcanvas"
+        >
+          <SidebarHeader>
+            <div className="px-2 py-1 text-sm font-semibold">Jethings Admin</div>
+          </SidebarHeader>
+      
+          <SidebarContent >
+            <SidebarGroup>
+              <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {sidebarItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton asChild>
-                        <a>
+                        <Link href={item.href}>
                           <item.icon />
                           <span>{item.label}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
-                    </Link>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter />
-        <SidebarRail />
-      </Sidebar>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+          <SidebarFooter>
+            <div className="p-2">
+              <LogoutButton className="w-full" variant="ghost" />
+            </div>
+          </SidebarFooter>
+          <SidebarRail />
+        </Sidebar>
 
-      <SidebarInset>
-        <header className="flex h-14 items-center gap-2  px-4">
-          <SidebarTrigger />
-          <div className="text-sm text-muted-foreground">Jethings Admin</div>
-        </header>
-        <div className="flex-1 p-6">
-          {children}
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+        <SidebarInset >
+          <header className="flex h-14 items-center gap-2 px-4 justify-between">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger />
+              <div className="text-sm text-muted-foreground">Jethings Admin</div>
+            </div>
+            <LogoutButton variant="outline" size="sm" />
+          </header>
+          <div className="flex-1 p-6">
+            {children}
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
   )
 }
 

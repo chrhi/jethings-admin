@@ -7,6 +7,7 @@ import { z } from "zod";
 import { ArrowLeft, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +25,10 @@ type ForgotPasswordStep1FormData = z.infer<typeof forgotPasswordStep1Schema>;
 
 export function ForgotPasswordStep1Form() {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
+  const { requestPasswordReset } = useAuth();
 
   const {
     register,
@@ -36,15 +40,17 @@ export function ForgotPasswordStep1Form() {
 
   const onSubmit = async (data: ForgotPasswordStep1FormData) => {
     setIsLoading(true);
+    setError(null);
     try {
-      // TODO: Implement actual forgot password logic
-      console.log("Forgot password step 1 data:", data);
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API call
-      
-      // Navigate to step 2 with email parameter
-      router.push(`/signin/forget-password/step2?email=${encodeURIComponent(data.email)}`);
+      await requestPasswordReset(data);
+      setSuccess(true);
+      // Navigate to step 2 with email parameter after a short delay
+      setTimeout(() => {
+        router.push(`/signin/forget-password/step2?email=${encodeURIComponent(data.email)}`);
+      }, 2000);
     } catch (error) {
       console.error("Forgot password error:", error);
+      setError(error instanceof Error ? error.message : 'Une erreur est survenue');
     } finally {
       setIsLoading(false);
     }
@@ -86,9 +92,21 @@ export function ForgotPasswordStep1Form() {
             )}
           </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
+          {error && (
+            <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+              {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+              Code de vérification envoyé avec succès ! Redirection en cours...
+            </div>
+          )}
+
+          <Button type="submit" className="w-full" disabled={isLoading || success}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Envoyer le code de vérification
+            {success ? "Code envoyé" : "Envoyer le code de vérification"}
           </Button>
         </form>
 

@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/auth-context";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +30,10 @@ type SignInFormData = z.infer<typeof signInSchema>;
 export function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { signIn } = useAuth();
 
   const {
     register,
@@ -39,12 +45,15 @@ export function SignInForm() {
 
   const onSubmit = async (data: SignInFormData) => {
     setIsLoading(true);
+    setError(null);
     try {
-      // TODO: Implement actual sign in logic
-      console.log("Sign in data:", data);
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+      await signIn(data);
+      // Redirect to the intended page or main dashboard
+      const redirectTo = searchParams.get('redirect') || '/';
+      router.push(redirectTo);
     } catch (error) {
       console.error("Sign in error:", error);
+      setError(error instanceof Error ? error.message : 'Une erreur est survenue');
     } finally {
       setIsLoading(false);
     }
@@ -115,6 +124,12 @@ export function SignInForm() {
               </Link>
             </div>
           </div>
+
+          {error && (
+            <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
+              {error}
+            </div>
+          )}
 
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

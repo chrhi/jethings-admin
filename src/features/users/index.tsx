@@ -1,25 +1,15 @@
-import { columns, Payment } from "./columns"
-import { DataTable } from "./table"
+// Core components
+export { columns } from "./columns"
+export { DataTable } from "./table"
 
-async function getData(): Promise<Payment[]> {
-  // Fetch data from your API here.
-  return [
-    {
-      id: "728ed52f",
-      amount: 100,
-      status: "pending",
-      email: "m@example.com",
-    },
-    // ...
-  ]
-}
+// Types
+export * from "./types"
 
-export default async function DemoPage() {
-  const data = await getData()
+// UI Components
+export { UserFiltersComponent } from "./components/user-filters"
+export { UserStatsComponent, RoleDistributionStats } from "./components/user-stats"
+export { PaginationComponent } from "./components/pagination"
 
-  return (
-    <div className="container mx-auto py-10">
-      <DataTable columns={columns} data={data} />
-    </div>
-  )
-}
+// Re-export for convenience
+export { useUsers, useUserStats, useCurrentUser, useUserActions } from "@/hooks/use-users"
+export { userService } from "@/lib/user-service"
