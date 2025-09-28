@@ -1,5 +1,5 @@
 import type { LucideIcon } from "lucide-react"
-import { Home, Users, UserCog } from "lucide-react"
+import { Home, Users, UserCog, Store, Settings } from "lucide-react"
 
 export type SidebarItem = {
   label: string
@@ -23,5 +23,18 @@ export const sidebar: SidebarItem[] = [
     label: "Gestion des rôles",
     icon: UserCog,
     href: "/admins",
+  },
+  {
+    label: "Gestion des magasins",
+    icon: Store,
+    href: "/stores",
+  },
+]
+
+export const sidebarFooter: SidebarItem[] = [
+  {
+    label: "Paramètres",
+    icon: Settings,
+    href: "/settings",
   },
 ]

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { RoleTable, RoleStats, CreateRoleForm } from "@/features/roles"
+import { RoleTable, RoleStats, CreateRoleModal } from "@/features/roles"
 import { useRoles } from "@/hooks/use-roles"
 import { RoleFilters, CreateRoleData } from "@/features/roles/types"
 import { Plus, RefreshCw, Search, Filter } from "lucide-react"
@@ -20,7 +20,7 @@ export default function RoleManagementPage() {
     search: '',
     isActive: undefined,
   })
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
 
   const { roles, loading, error, pagination, createRole, refetch } = useRoles(filters)
 
@@ -43,14 +43,11 @@ export default function RoleManagementPage() {
   const handleCreateRole = async (data: CreateRoleData) => {
     try {
       await createRole(data)
-      setShowCreateForm(false)
+      setCreateModalOpen(false)
+      refetch() // Refresh the roles list
     } catch (error) {
       console.error('Failed to create role:', error)
     }
-  }
-
-  const handleCancelCreate = () => {
-    setShowCreateForm(false)
   }
 
   return (
@@ -58,31 +55,30 @@ export default function RoleManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Role Management</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Gestion des rôles</h1>
           <p className="text-muted-foreground">
-            Create and manage user roles with specific permissions
+            Créer et gérer les rôles utilisateur avec des permissions spécifiques
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            Actualiser
           </Button>
-          <Button onClick={() => setShowCreateForm(true)}>
+          <Button onClick={() => setCreateModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Create Role
+            Créer un rôle
           </Button>
         </div>
       </div>
 
-      {/* Create Role Form */}
-      {showCreateForm && (
-        <CreateRoleForm
-          onSubmit={handleCreateRole}
-          onCancel={handleCancelCreate}
-          loading={loading}
-        />
-      )}
+      {/* Create Role Modal */}
+      <CreateRoleModal
+        open={createModalOpen}
+        onOpenChange={setCreateModalOpen}
+        onSubmit={handleCreateRole}
+        loading={loading}
+      />
 
       {/* Role Stats */}
       <RoleStats roles={roles} />

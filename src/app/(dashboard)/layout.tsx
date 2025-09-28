@@ -8,7 +8,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { SidebarContent } from "@/layout/sidebar-content"
-import Image from "next/image"
+import OurSidebarHeader from "@/components/layout/sidebar-header"
 
 export default function DashboardLayout({
   children,
@@ -31,12 +31,6 @@ export default function DashboardLayout({
           collapsible="offcanvas"
           className="bg-gray-100"
         >
-          <SidebarHeader>
-            <div className="px-2 py-1 text-sm font-semibold w-full flex items-center justify-center">
-              <Image src="/logo.png" alt="Jethings Admin" width={100} height={100} />
-            </div>
-          </SidebarHeader>
-      
           <SidebarContent />
           <SidebarFooter>
           </SidebarFooter>
@@ -44,11 +38,7 @@ export default function DashboardLayout({
         </Sidebar>
 
         <div className="flex flex-col w-full">
-          <header className="sticky top-0 z-50 flex h-14 items-center gap-2 px-4 justify-between bg-background border-b">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger />
-            </div>
-          </header>
+          <OurSidebarHeader />
           <SidebarInset className="flex-1">
             <div className="p-6">
               {children}

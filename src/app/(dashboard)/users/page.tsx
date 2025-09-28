@@ -4,13 +4,20 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent} from "@/components/ui/card"
 import { DataTable } from "@/features/users/table"
-import { columns } from "@/features/users/columns"
-import { UserFiltersComponent } from "@/features/users/components/user-filters"
+import { createColumns } from "@/features/users/columns"
 import { UserStatsComponent} from "@/features/users/components/user-stats"
 import { PaginationComponent } from "@/features/users/components/pagination"
 import { useUsers, useUserStats } from "@/hooks/use-users"
 import { UserFilters } from "@/features/users/types"
-import { Plus, Download, RefreshCw } from "lucide-react"
+import { Plus, Download, RefreshCw, FileSpreadsheet } from "lucide-react"
+import { exportUsersToExcel, exportUsersToCSV } from "@/lib/export-utils"
+import toast from "react-hot-toast"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UserFilters>({
@@ -22,19 +29,6 @@ export default function UsersPage() {
 
   const { users, loading, error, pagination, refetch } = useUsers(filters)
   const { stats, loading: statsLoading } = useUserStats()
-
-  const handleFiltersChange = (newFilters: UserFilters) => {
-    setFilters(newFilters)
-  }
-
-  const handleResetFilters = () => {
-    setFilters({
-      page: 1,
-      limit: 10,
-      sortBy: 'createdAt',
-      sortOrder: 'desc'
-    })
-  }
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }))
@@ -48,9 +42,31 @@ export default function UsersPage() {
     refetch()
   }
 
-  const handleExport = () => {
-    
-    console.log('Export users')
+  const handleExportExcel = () => {
+    try {
+      exportUsersToExcel(users, {
+        filename: 'users',
+        sheetName: 'Users',
+        includeHeaders: true
+      })
+      toast.success(`${users.length} utilisateurs exportés vers Excel avec succès !`)
+    } catch (error) {
+      console.error('Error exporting to Excel:', error)
+      toast.error('Échec de l\'exportation vers Excel. Veuillez réessayer.')
+    }
+  }
+
+  const handleExportCSV = () => {
+    try {
+      exportUsersToCSV(users, {
+        filename: 'users',
+        includeHeaders: true
+      })
+      toast.success(`${users.length} utilisateurs exportés vers CSV avec succès !`)
+    } catch (error) {
+      console.error('Error exporting to CSV:', error)
+      toast.error('Échec de l\'exportation vers CSV. Veuillez réessayer.')
+    }
   }
 
   const handleCreateUser = () => {
@@ -73,29 +89,35 @@ export default function UsersPage() {
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            Actualiser
           </Button>
-          <Button variant="outline" onClick={handleExport}>
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-          <Button onClick={handleCreateUser}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add User
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" disabled={loading || users.length === 0}>
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportExcel}>
+                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                Exporter en Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportCSV}>
+                <Download className="h-4 w-4 mr-2" />
+                Exporter en CSV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+         
         </div>
       </div>
+
 
       {/* Stats */}
       <UserStatsComponent stats={stats} loading={statsLoading} />
 
 
-      {/* Filters */}
-      <UserFiltersComponent
-        filters={filters}
-        onFiltersChange={handleFiltersChange}
-        onReset={handleResetFilters}
-      />
 
       {/* Error State */}
       {error && (
@@ -116,9 +138,10 @@ export default function UsersPage() {
     
         <CardContent className="p-0">
           <DataTable 
-            columns={columns} 
+            columns={createColumns(refetch)} 
             data={users} 
             loading={loading}
+            onUserUpdate={refetch}
           />
           
           {/* Pagination */}

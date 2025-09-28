@@ -4,10 +4,10 @@ const BACKEND_URL = process.env.BACKEND_URL || 'https://jethings-backend.fly.dev
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     
     // Forward the request to your backend
     const backendUrl = `${BACKEND_URL}/users/${id}`
@@ -51,10 +51,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     
     // Forward the request to your backend
@@ -100,10 +100,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     
     // Forward the request to your backend
     const backendUrl = `${BACKEND_URL}/users/${id}`
@@ -128,6 +128,9 @@ export async function DELETE(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: 'Backend error' }))
+      console.error('Backend error response:', errorData)
+      console.error('Backend response status:', response.status)
+      console.error('Backend URL called:', backendUrl)
       return NextResponse.json(
         { message: errorData.message || 'Failed to delete user' },
         { status: response.status }

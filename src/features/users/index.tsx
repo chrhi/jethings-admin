@@ -1,5 +1,5 @@
 // Core components
-export { columns } from "./columns"
+export { createColumns } from "./columns"
 export { DataTable } from "./table"
 
 // Types

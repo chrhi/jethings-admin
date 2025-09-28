@@ -2,16 +2,18 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Users, 
-  UserCog, 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  Users,
+  UserCog,
+  TrendingUp,
+  TrendingDown,
   Activity,
   Shield,
   Eye,
-  AlertTriangle
+  AlertTriangle,
+  Store
 } from "lucide-react"
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts"
 
 interface KPICardProps {
   title: string
@@ -26,9 +28,62 @@ interface KPICardProps {
     text: string
     variant: 'default' | 'secondary' | 'destructive' | 'outline'
   }
+  chartData?: Array<{ name: string; value: number }>
+  chartType?: 'line' | 'area' | 'bar'
+  chartColor?: string
 }
 
-function KPICard({ title, value, change, icon, description, badge }: KPICardProps) {
+function KPICard({ title, value, change, icon, description, badge, chartData, chartType = 'line', chartColor = '#3b82f6' }: KPICardProps) {
+  const renderChart = () => {
+    if (!chartData || chartData.length === 0) return null;
+
+    const chartProps = {
+      data: chartData,
+      width: '100%',
+      height: 60,
+    };
+
+    switch (chartType) {
+      case 'area':
+        return (
+          <ResponsiveContainer width="100%" height={60}>
+            <AreaChart data={chartData}>
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={chartColor}
+                fill={chartColor}
+                fillOpacity={0.1}
+                strokeWidth={2}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        );
+      case 'bar':
+        return (
+          <ResponsiveContainer width="100%" height={60}>
+            <BarChart data={chartData}>
+              <Bar dataKey="value" fill={chartColor} radius={[2, 2, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        );
+      default:
+        return (
+          <ResponsiveContainer width="100%" height={60}>
+            <LineChart data={chartData}>
+              <Line
+                type="monotone"
+                dataKey="value"
+                stroke={chartColor}
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        );
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -52,6 +107,11 @@ function KPICard({ title, value, change, icon, description, badge }: KPICardProp
             </span>
           </div>
         )}
+        {chartData && (
+          <div className="mt-3">
+            {renderChart()}
+          </div>
+        )}
         {badge && (
           <div className="mt-2">
             <Badge variant={badge.variant} className="text-xs">
@@ -65,59 +125,54 @@ function KPICard({ title, value, change, icon, description, badge }: KPICardProp
 }
 
 export function KPICards() {
+
+  const userGrowthData = [
+    { name: 'Jan', value: 1800 },
+    { name: 'Feb', value: 1950 },
+    { name: 'Mar', value: 2100 },
+    { name: 'Apr', value: 2200 },
+    { name: 'May', value: 2300 },
+    { name: 'Jun', value: 2350 },
+  ];
+
+  const storeGrowthData = [
+    { name: 'Jan', value: 85 },
+    { name: 'Feb', value: 98 },
+    { name: 'Mar', value: 115 },
+    { name: 'Apr', value: 128 },
+    { name: 'May', value: 138 },
+    { name: 'Jun', value: 145 },
+  ];
+
+  
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       <KPICard
-        title="Total Users"
+        title="User Growth"
         value="2,350"
         change={{ value: 12.5, type: 'increase' }}
         icon={<Users className="h-4 w-4 text-muted-foreground" />}
         description="Active users in the system"
-        badge={{ text: "Active", variant: "default" }}
+        badge={{ text: "Growing", variant: "default" }}
+        chartData={userGrowthData}
+        chartType="area"
+        chartColor="#10b981"
       />
       
       <KPICard
-        title="Admin Roles"
-        value="8"
-        change={{ value: 2.1, type: 'increase' }}
-        icon={<UserCog className="h-4 w-4 text-muted-foreground" />}
-        description="Different role types"
-        badge={{ text: "Configured", variant: "secondary" }}
+        title="Store Growth"
+        value="145"
+        change={{ value: 18.3, type: 'increase' }}
+        icon={<Store className="h-4 w-4 text-muted-foreground" />}
+        description="Total registered stores"
+        badge={{ text: "Expanding", variant: "default" }}
+        chartData={storeGrowthData}
+        chartType="line"
+        chartColor="#3b82f6"
       />
       
-      <KPICard
-        title="System Health"
-        value="99.9%"
-        change={{ value: 0.1, type: 'increase' }}
-        icon={<Activity className="h-4 w-4 text-muted-foreground" />}
-        description="Uptime this month"
-        badge={{ text: "Excellent", variant: "default" }}
-      />
-      
-      <KPICard
-        title="Security Score"
-        value="A+"
-        icon={<Shield className="h-4 w-4 text-muted-foreground" />}
-        description="Overall security rating"
-        badge={{ text: "Secure", variant: "default" }}
-      />
-      
-      <KPICard
-        title="Page Views"
-        value="45,231"
-        change={{ value: 8.2, type: 'increase' }}
-        icon={<Eye className="h-4 w-4 text-muted-foreground" />}
-        description="This month"
-        badge={{ text: "Growing", variant: "secondary" }}
-      />
-      
-      <KPICard
-        title="Alerts"
-        value="3"
-        icon={<AlertTriangle className="h-4 w-4 text-muted-foreground" />}
-        description="Pending notifications"
-        badge={{ text: "Low", variant: "outline" }}
-      />
+     
     </div>
   )
 }
