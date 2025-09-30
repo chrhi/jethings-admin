@@ -49,28 +49,28 @@ export function StoreStatsComponent({ stats, loading = false }: StoreStatsProps)
   const statCards = [
     {
       title: "Total des magasins",
-      value: stats.totalStores,
+      value: stats.total,
       icon: Store,
       description: "Tous les magasins",
       color: "text-blue-600"
     },
     {
       title: "Magasins actifs",
-      value: stats.activeStores,
+      value: stats.active,
       icon: CheckCircle,
       description: "Approuvés et opérationnels",
       color: "text-green-600"
     },
     {
       title: "En attente",
-      value: stats.pendingStores,
+      value: stats.pending,
       icon: Clock,
       description: "En cours de validation",
       color: "text-yellow-600"
     },
     {
       title: "Rejetés",
-      value: stats.rejectedStores,
+      value: stats.rejected,
       icon: XCircle,
       description: "Non approuvés",
       color: "text-red-600"

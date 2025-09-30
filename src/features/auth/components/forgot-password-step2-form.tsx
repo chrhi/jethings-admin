@@ -14,25 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { forgotPasswordStep2Schema } from "../schema/sign.schema";
 
-const forgotPasswordStep2Schema = z.object({
-  verificationCode: z
-    .string()
-    .min(6, "Le code de vérification doit comporter 6 chiffres")
-    .max(6, "Le code de vérification doit comporter 6 chiffres")
-    .regex(/^\d+$/, "Le code de vérification doit contenir uniquement des chiffres"),
-  newPassword: z
-    .string()
-    .min(8, "Le mot de passe doit contenir au moins 8 caractères")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-      "Le mot de passe doit contenir au moins une majuscule, une minuscule et un chiffre"
-    ),
-  confirmPassword: z.string().min(1, "Veuillez confirmer votre mot de passe"),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: "Les mots de passe ne correspondent pas",
-  path: ["confirmPassword"],
-});
 
 type ForgotPasswordStep2FormData = z.infer<typeof forgotPasswordStep2Schema>;
 

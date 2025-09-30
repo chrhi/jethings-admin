@@ -16,7 +16,10 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/signin");
+      // Get the current pathname to redirect back after login
+      const currentPath = window.location.pathname
+      const redirectUrl = currentPath !== '/' ? `?redirect=${encodeURIComponent(currentPath)}` : ''
+      router.push(`/signin${redirectUrl}`)
     }
   }, [isAuthenticated, isLoading, router]);
 

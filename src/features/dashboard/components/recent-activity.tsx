@@ -95,9 +95,9 @@ const getActivityIcon = (type: ActivityItem['type']) => {
 const getStatusBadge = (status: ActivityItem['status']) => {
   switch (status) {
     case 'completed':
-      return <Badge variant="default" className="text-xs">Completed</Badge>
+      return <Badge variant="success" className="text-xs">Completed</Badge>
     case 'pending':
-      return <Badge variant="secondary" className="text-xs">Pending</Badge>
+      return <Badge variant="pending" className="text-xs">Pending</Badge>
     case 'failed':
       return <Badge variant="destructive" className="text-xs">Failed</Badge>
     default:
@@ -141,7 +141,7 @@ export function RecentActivity() {
           ))}
         </div>
         <div className="mt-4 pt-4 border-t">
-          <button className="text-sm text-blue-600 hover:text-blue-800 font-medium">
+          <button className="text-sm text-blue-600 hover:text-blue-800 font-medium cursor-pointer">
             View all activities →
           </button>
         </div>

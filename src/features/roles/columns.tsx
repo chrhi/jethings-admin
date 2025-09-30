@@ -36,7 +36,7 @@ export const columns: ColumnDef<Role>[] = [
       return (
         <div className="flex flex-wrap gap-1">
           {permissions.slice(0, 3).map((permission) => (
-            <Badge key={permission} variant="secondary" className="text-xs">
+            <Badge key={permission} variant="info" className="text-xs">
               {permission}
             </Badge>
           ))}
@@ -68,7 +68,7 @@ export const columns: ColumnDef<Role>[] = [
     cell: ({ row }) => {
       const isActive = row.getValue("isActive") as boolean
       return (
-        <Badge variant={isActive ? "default" : "secondary"}>
+        <Badge variant={isActive ? "success" : "warning"}>
           {isActive ? "Active" : "Inactive"}
         </Badge>
       )

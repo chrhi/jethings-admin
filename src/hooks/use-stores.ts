@@ -1,111 +1,211 @@
-import { useState, useEffect } from 'react'
+"use client"
+
+import { useState, useEffect, useCallback } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { 
+  Store, 
+  StoreResponse, 
+  StoreFilters, 
+  CreateStoreRequest, 
+  UpdateStoreRequest, 
+  UpdateStoreUserRequest 
+} from '@/types/store'
 import { storeService } from '@/lib/store-service'
-import { Store, StoreStats, StoreFilters, CreateStoreData, UpdateStoreData } from '@/features/stores/types'
 
-export function useStores(filters: StoreFilters) {
-  const [stores, setStores] = useState<Store[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [total, setTotal] = useState(0)
-
-  const fetchStores = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await storeService.getStores(filters)
-      setStores(result.stores)
-      setTotal(result.total)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des magasins')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const createStore = async (data: CreateStoreData) => {
-    try {
-      setLoading(true)
-      setError(null)
-      await storeService.createStore(data)
-      await fetchStores() // Refresh the list
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la création du magasin')
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const updateStore = async (data: UpdateStoreData) => {
-    try {
-      setLoading(true)
-      setError(null)
-      await storeService.updateStore(data)
-      await fetchStores() // Refresh the list
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour du magasin')
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const deleteStore = async (id: string) => {
-    try {
-      setLoading(true)
-      setError(null)
-      await storeService.deleteStore(id)
-      await fetchStores() // Refresh the list
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la suppression du magasin')
-      throw err
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchStores()
-  }, [filters])
-
-  return {
-    stores,
-    loading,
-    error,
-    total,
-    refetch: fetchStores,
-    createStore,
-    updateStore,
-    deleteStore
-  }
+export const storeKeys = {
+  all: ['stores'] as const,
+  lists: () => [...storeKeys.all, 'list'] as const,
+  list: (filters: StoreFilters) => [...storeKeys.lists(), filters] as const,
+  details: () => [...storeKeys.all, 'detail'] as const,
+  detail: (id: string) => [...storeKeys.details(), id] as const,
+  my: () => [...storeKeys.all, 'my'] as const,
+  myList: (filters: StoreFilters) => [...storeKeys.my(), 'list', filters] as const,
+  stats: () => [...storeKeys.all, 'stats'] as const,
 }
 
+// Hook for getting all stores (Admin)
+export function useStores(filters: StoreFilters = {}) {
+  return useQuery({
+    queryKey: storeKeys.list(filters),
+    queryFn: () => storeService.getAllStores(filters),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+    retryDelay: 1000,
+  })
+}
+
+// Hook for getting user's stores
+export function useMyStores(filters: StoreFilters = {}) {
+  return useQuery({
+    queryKey: storeKeys.myList(filters),
+    queryFn: () => storeService.getMyStores(filters),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 1,
+    retryDelay: 1000,
+  })
+}
+
+// Hook for getting a single store
+export function useStore(id: string) {
+  return useQuery({
+    queryKey: storeKeys.detail(id),
+    queryFn: () => storeService.getStoreById(id),
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+}
+
+// Hook for store statistics
 export function useStoreStats() {
-  const [stats, setStats] = useState<StoreStats | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  return useQuery({
+    queryKey: storeKeys.stats(),
+    queryFn: () => storeService.getStoreStats(),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    retry: 1,
+    retryDelay: 1000,
+  })
+}
 
-  const fetchStats = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const result = await storeService.getStoreStats()
-      setStats(result)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors du chargement des statistiques')
-    } finally {
-      setLoading(false)
-    }
-  }
+// Hook for creating a store
+export function useCreateStore() {
+  const queryClient = useQueryClient()
 
-  useEffect(() => {
-    fetchStats()
+  return useMutation({
+    mutationFn: (data: CreateStoreRequest) => storeService.createStore(data),
+    onSuccess: () => {
+  
+      queryClient.invalidateQueries({ queryKey: storeKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: storeKeys.my() })
+      queryClient.invalidateQueries({ queryKey: storeKeys.stats() })
+    },
+  })
+}
+
+
+export function useUpdateStore() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateStoreRequest }) =>
+      storeService.updateStore(id, data),
+    onSuccess: (updatedStore) => {
+    
+      queryClient.setQueryData(storeKeys.detail(updatedStore.id), updatedStore)
+      
+   
+      queryClient.invalidateQueries({ queryKey: storeKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: storeKeys.my() })
+      queryClient.invalidateQueries({ queryKey: storeKeys.stats() })
+    },
+  })
+}
+
+
+export function useUpdateStoreUser() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: UpdateStoreUserRequest }) =>
+      storeService.updateStoreUser(id, data),
+    onSuccess: (updatedStore) => {
+  
+      queryClient.setQueryData(storeKeys.detail(updatedStore.id), updatedStore)
+      
+  
+      queryClient.invalidateQueries({ queryKey: storeKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: storeKeys.my() })
+    },
+  })
+}
+
+// Hook for deleting a store (Admin)
+export function useDeleteStore() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => storeService.deleteStore(id),
+    onSuccess: (_, deletedId) => {
+      // Remove the store from cache
+      queryClient.removeQueries({ queryKey: storeKeys.detail(deletedId) })
+      
+      // Invalidate lists to refetch
+      queryClient.invalidateQueries({ queryKey: storeKeys.lists() })
+      queryClient.invalidateQueries({ queryKey: storeKeys.my() })
+      queryClient.invalidateQueries({ queryKey: storeKeys.stats() })
+    },
+  })
+}
+
+// Hook for store management with pagination
+export function useStoreManagement(initialFilters: StoreFilters = {}) {
+  const [filters, setFilters] = useState<StoreFilters>({
+    page: 1,
+    limit: 10,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    ...initialFilters,
+  })
+
+  const { data, isLoading, error, refetch } = useStores(filters)
+
+  const updateFilters = useCallback((newFilters: Partial<StoreFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+  }, [])
+
+  const resetFilters = useCallback(() => {
+    setFilters({
+      page: 1,
+      limit: 10,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    })
   }, [])
 
   return {
-    stats,
-    loading,
+    stores: data?.stores || [],
+    pagination: data?.pagination,
+    filters,
+    updateFilters,
+    resetFilters,
+    isLoading,
     error,
-    refetch: fetchStats
+    refetch,
+  }
+}
+
+// Hook for user store management with pagination
+export function useMyStoreManagement(initialFilters: StoreFilters = {}) {
+  const [filters, setFilters] = useState<StoreFilters>({
+    page: 1,
+    limit: 10,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    ...initialFilters,
+  })
+
+  const { data, isLoading, error, refetch } = useMyStores(filters)
+
+  const updateFilters = useCallback((newFilters: Partial<StoreFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+  }, [])
+
+  const resetFilters = useCallback(() => {
+    setFilters({
+      page: 1,
+      limit: 10,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+    })
+  }, [])
+
+  return {
+    stores: data?.stores || [],
+    pagination: data?.pagination,
+    filters,
+    updateFilters,
+    resetFilters,
+    isLoading,
+    error,
+    refetch,
   }
 }

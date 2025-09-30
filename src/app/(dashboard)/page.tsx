@@ -1,6 +1,5 @@
 import { 
   KPICards, 
- 
 } from "@/features/dashboard"
 
 export default function Home() {
@@ -13,11 +12,8 @@ export default function Home() {
           Welcome to your admin dashboard. Monitor system performance and user activity.
         </p>
       </div>
-
       {/* KPI Cards */}
       <KPICards />
-
-      
     </div>
   )
 }

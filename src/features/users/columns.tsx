@@ -26,7 +26,7 @@ export const createColumns = (onUserUpdate?: () => void): ColumnDef<User>[] => [
           {roles.map((role) => (
             <Badge 
               key={role} 
-              variant={role === 'super_admin' ? 'destructive' : role === 'admin' ? 'default' : 'secondary'}
+              variant={role === 'super_admin' ? 'purple' : role === 'admin' ? 'indigo' : 'secondary'}
             >
               {role.replace('_', ' ')}
             </Badge>
@@ -49,7 +49,7 @@ export const createColumns = (onUserUpdate?: () => void): ColumnDef<User>[] => [
     cell: ({ row }) => {
       const isVerified = row.getValue("isEmailVerified") as boolean
       return (
-        <Badge variant={isVerified ? "default" : "secondary"}>
+        <Badge variant={isVerified ? "success" : "warning"}>
           {isVerified ? "Verified" : "Unverified"}
         </Badge>
       )
@@ -61,7 +61,7 @@ export const createColumns = (onUserUpdate?: () => void): ColumnDef<User>[] => [
     cell: ({ row }) => {
       const isActive = row.getValue("isActive") as boolean
       return (
-        <Badge variant={isActive ? "default" : "destructive"}>
+        <Badge variant={isActive ? "success" : "outline"}>
           {isActive ? "Active" : "Inactive"}
         </Badge>
       )

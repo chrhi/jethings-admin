@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import {  Montserrat } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
 
-const montserrat = Montserrat({
-  variable: "--font-montserrat",
+const roboto = Roboto({
+  variable: "--font-roboto",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -19,14 +20,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <body
-        className={`${montserrat.variable} ${montserrat.variable} antialiased`}
+        className={`${roboto.variable} antialiased`}
       >
         <Providers>
-        {children}
+          {children}
         </Providers>
-     
       </body>
     </html>
   );

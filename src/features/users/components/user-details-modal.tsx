@@ -46,10 +46,10 @@ export function UserDetailsModal({ user, open, onOpenChange }: UserDetailsModalP
               </h3>
               <p className="text-muted-foreground">{user.email}</p>
               <div className="flex space-x-2">
-                <Badge variant={user.isActive ? "default" : "destructive"}>
+                <Badge variant={user.isActive ? "success" : "destructive"}>
                   {user.isActive ? "Actif" : "Inactif"}
                 </Badge>
-                <Badge variant={user.isEmailVerified ? "default" : "secondary"}>
+                <Badge variant={user.isEmailVerified ? "success" : "warning"}>
                   {user.isEmailVerified ? "Vérifié" : "Non vérifié"}
                 </Badge>
               </div>
@@ -95,7 +95,7 @@ export function UserDetailsModal({ user, open, onOpenChange }: UserDetailsModalP
                     {user.roles.map((role) => (
                       <Badge 
                         key={role} 
-                        variant={role === 'super_admin' ? 'destructive' : role === 'admin' ? 'default' : 'secondary'}
+                        variant={role === 'super_admin' ? 'purple' : role === 'admin' ? 'indigo' : 'secondary'}
                         className="text-xs"
                       >
                         {role === 'super_admin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Utilisateur'}

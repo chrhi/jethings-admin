@@ -13,17 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { signInSchema } from "../schema/sign.schema";
 
-const signInSchema = z.object({
-  email: z
-    .string()
-    .min(1, "L'email est requis")
-    .email("Veuillez saisir une adresse e-mail valide"),
-  password: z
-    .string()
-    .min(1, "Le mot de passe est requis")
-    .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
-});
+
 
 type SignInFormData = z.infer<typeof signInSchema>;
 
@@ -48,8 +40,11 @@ function SignInFormContent() {
     setError(null);
     try {
       await signIn(data);
+      // Small delay to ensure cookies are set
+      await new Promise(resolve => setTimeout(resolve, 100));
       // Redirect to the intended page or main dashboard
       const redirectTo = searchParams.get('redirect') || '/';
+      console.log('Redirecting to:', redirectTo);
       router.push(redirectTo);
     } catch (error) {
       console.error("Sign in error:", error);
@@ -60,25 +55,25 @@ function SignInFormContent() {
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="space-y-1">
+    <Card className="w-full shadow-none border-0 bg-background/80 backdrop-blur-sm">
+      <CardHeader className="space-y-1 pb-6">
         <CardTitle className="text-2xl font-bold text-center">
           Bon retour
         </CardTitle>
-        <CardDescription className="text-center">
+        <CardDescription className="text-center text-muted-foreground">
           Connectez-vous à votre compte pour continuer
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <CardContent className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
+            <Label htmlFor="email" className="text-sm font-medium">E-mail</Label>
             <Input
               id="email"
               type="email"
               placeholder="Entrez votre e-mail"
               {...register("email")}
-              className={errors.email ? "border-destructive" : ""}
+              className={`h-11 ${errors.email ? "border-destructive" : ""}`}
             />
             {errors.email && (
               <p className="text-sm text-destructive">{errors.email.message}</p>
@@ -86,14 +81,14 @@ function SignInFormContent() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password" className="text-sm font-medium">Mot de passe</Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
                 placeholder="Entrez votre mot de passe"
                 {...register("password")}
-                className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                className={`h-11 pr-10 ${errors.password ? "border-destructive" : ""}`}
               />
               <Button
                 type="button"
@@ -114,15 +109,13 @@ function SignInFormContent() {
             )}
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link
-                href="/signin/forget-password"
-                className="text-primary hover:text-primary/80 font-medium"
-              >
-                Mot de passe oublié ?
-              </Link>
-            </div>
+          <div className="flex items-center justify-end">
+            <Link
+              href="/signin/forget-password"
+              className="text-sm text-primary hover:text-primary/80 font-medium"
+            >
+              Mot de passe oublié ?
+            </Link>
           </div>
 
           {error && (
@@ -131,7 +124,7 @@ function SignInFormContent() {
             </div>
           )}
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type="submit" className="w-full h-11 text-base font-medium" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Se connecter
           </Button>

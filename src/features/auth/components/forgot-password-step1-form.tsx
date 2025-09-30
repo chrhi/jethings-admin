@@ -8,18 +8,13 @@ import { ArrowLeft, Loader2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/auth-context";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { forgotPasswordStep1Schema } from "../schema/sign.schema";
 
-const forgotPasswordStep1Schema = z.object({
-  email: z
-    .string()
-    .min(1, "L'email est requis")
-    .email("Veuillez saisir une adresse e-mail valide"),
-});
+
 
 type ForgotPasswordStep1FormData = z.infer<typeof forgotPasswordStep1Schema>;
 

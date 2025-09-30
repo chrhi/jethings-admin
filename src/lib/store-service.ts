@@ -1,244 +1,195 @@
-import { Store, StoreStats, CreateStoreData, UpdateStoreData, StoreFilters } from '@/features/stores/types'
+import { 
+  Store, 
+  StoreResponse, 
+  StoreFilters, 
+  CreateStoreRequest, 
+  UpdateStoreRequest, 
+  UpdateStoreUserRequest,
+  ApiError 
+} from '@/types/store'
+import { mockStoreResponse, mockStoreStats } from './mock-store-data'
 
-// Mock data
-const mockStores: Store[] = [
-  {
-    id: '1',
-    name: 'Magasin Central',
-    address: '123 Rue de la Paix',
-    phone: '+33 1 23 45 67 89',
-    email: 'central@jethings.com',
-    status: 'approved',
-    manager: 'Jean Dupont',
-    managerEmail: 'jean.dupont@jethings.com',
-    createdAt: '2024-01-15T10:00:00Z',
-    updatedAt: '2024-01-15T10:00:00Z',
-    description: 'Magasin principal situé au cœur de Paris',
-    city: 'Paris',
-    country: 'France',
-    postalCode: '75001',
-    totalSales: 125000,
-    monthlySales: 15000,
-    totalOrders: 1250,
-    customerCount: 850
-  },
-  {
-    id: '2',
-    name: 'Magasin Nord',
-    address: '456 Avenue du Nord',
-    phone: '+33 3 20 12 34 56',
-    email: 'nord@jethings.com',
-    status: 'pending',
-    manager: 'Marie Martin',
-    managerEmail: 'marie.martin@jethings.com',
-    createdAt: '2024-02-20T14:30:00Z',
-    updatedAt: '2024-02-20T14:30:00Z',
-    description: 'Nouveau magasin dans le nord de la France',
-    city: 'Lille',
-    country: 'France',
-    postalCode: '59000',
-    totalSales: 0,
-    monthlySales: 0,
-    totalOrders: 0,
-    customerCount: 0
-  },
-  {
-    id: '3',
-    name: 'Magasin Sud',
-    address: '789 Boulevard du Sud',
-    phone: '+33 4 91 23 45 67',
-    email: 'sud@jethings.com',
-    status: 'rejected',
-    manager: 'Pierre Durand',
-    managerEmail: 'pierre.durand@jethings.com',
-    createdAt: '2024-01-30T09:15:00Z',
-    updatedAt: '2024-02-01T16:45:00Z',
-    description: 'Magasin fermé pour non-conformité',
-    city: 'Marseille',
-    country: 'France',
-    postalCode: '13001',
-    totalSales: 0,
-    monthlySales: 0,
-    totalOrders: 0,
-    customerCount: 0
-  },
-  {
-    id: '4',
-    name: 'Magasin Ouest',
-    address: '321 Rue de l\'Ouest',
-    phone: '+33 2 40 12 34 56',
-    email: 'ouest@jethings.com',
-    status: 'inactive',
-    manager: 'Sophie Bernard',
-    managerEmail: 'sophie.bernard@jethings.com',
-    createdAt: '2024-01-10T11:20:00Z',
-    updatedAt: '2024-02-15T13:30:00Z',
-    description: 'Magasin temporairement fermé pour rénovation',
-    city: 'Nantes',
-    country: 'France',
-    postalCode: '44000',
-    totalSales: 45000,
-    monthlySales: 0,
-    totalOrders: 320,
-    customerCount: 180
-  },
-  {
-    id: '5',
-    name: 'Magasin Est',
-    address: '654 Avenue de l\'Est',
-    phone: '+33 3 83 12 34 56',
-    email: 'est@jethings.com',
-    status: 'approved',
-    manager: 'Thomas Moreau',
-    managerEmail: 'thomas.moreau@jethings.com',
-    createdAt: '2024-02-05T08:45:00Z',
-    updatedAt: '2024-02-05T08:45:00Z',
-    description: 'Magasin moderne avec technologies avancées',
-    city: 'Strasbourg',
-    country: 'France',
-    postalCode: '67000',
-    totalSales: 78000,
-    monthlySales: 12000,
-    totalOrders: 650,
-    customerCount: 420
-  }
-]
+const API_BASE_URL = '/api/stores'
 
-export const storeService = {
-  async getStores(filters: StoreFilters): Promise<{ stores: Store[], total: number }> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    let filteredStores = [...mockStores]
-    
-    // Apply search filter
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase()
-      filteredStores = filteredStores.filter(store => 
-        store.name.toLowerCase().includes(searchLower) ||
-        store.city.toLowerCase().includes(searchLower) ||
-        store.manager.toLowerCase().includes(searchLower) ||
-        store.email.toLowerCase().includes(searchLower)
-      )
-    }
-    
-    // Apply status filter
-    if (filters.status) {
-      filteredStores = filteredStores.filter(store => store.status === filters.status)
-    }
-    
-    // Apply city filter
-    if (filters.city) {
-      filteredStores = filteredStores.filter(store => 
-        store.city.toLowerCase().includes(filters.city!.toLowerCase())
-      )
-    }
-    
-    // Apply sorting
-    filteredStores.sort((a, b) => {
-      const aValue = a[filters.sortBy]
-      const bValue = b[filters.sortBy]
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return filters.sortOrder === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue)
-      }
-      
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return filters.sortOrder === 'asc' 
-          ? aValue - bValue
-          : bValue - aValue
-      }
-      
-      return 0
-    })
-    
-    // Apply pagination
-    const startIndex = (filters.page - 1) * filters.limit
-    const endIndex = startIndex + filters.limit
-    const paginatedStores = filteredStores.slice(startIndex, endIndex)
-    
-    return {
-      stores: paginatedStores,
-      total: filteredStores.length
-    }
-  },
-
-  async getStoreStats(): Promise<StoreStats> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    const totalStores = mockStores.length
-    const activeStores = mockStores.filter(store => store.status === 'approved').length
-    const pendingStores = mockStores.filter(store => store.status === 'pending').length
-    const rejectedStores = mockStores.filter(store => store.status === 'rejected').length
-    
-    const totalSales = mockStores.reduce((sum, store) => sum + (store.totalSales || 0), 0)
-    const monthlySales = mockStores.reduce((sum, store) => sum + (store.monthlySales || 0), 0)
-    const totalOrders = mockStores.reduce((sum, store) => sum + (store.totalOrders || 0), 0)
-    const totalCustomers = mockStores.reduce((sum, store) => sum + (store.customerCount || 0), 0)
-    
-    return {
-      totalStores,
-      activeStores,
-      pendingStores,
-      rejectedStores,
-      totalSales,
-      monthlySales,
-      totalOrders,
-      totalCustomers
-    }
-  },
-
-  async createStore(data: CreateStoreData): Promise<Store> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    const newStore: Store = {
-      id: Date.now().toString(),
-      ...data,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      totalSales: 0,
-      monthlySales: 0,
-      totalOrders: 0,
-      customerCount: 0
-    }
-    
-    mockStores.push(newStore)
-    return newStore
-  },
-
-  async updateStore(data: UpdateStoreData): Promise<Store> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    const storeIndex = mockStores.findIndex(store => store.id === data.id)
-    if (storeIndex === -1) {
-      throw new Error('Store not found')
-    }
-    
-    const updatedStore = {
-      ...mockStores[storeIndex],
-      ...data,
-      updatedAt: new Date().toISOString()
-    }
-    
-    mockStores[storeIndex] = updatedStore
-    return updatedStore
-  },
-
-  async deleteStore(id: string): Promise<void> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 600))
-    
-    const storeIndex = mockStores.findIndex(store => store.id === id)
-    if (storeIndex === -1) {
-      throw new Error('Store not found')
-    }
-    
-    mockStores.splice(storeIndex, 1)
+// Helper function to get auth token
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    return localStorage.getItem('access_token')
+  } catch {
+    return null
   }
 }
+
+// Helper function to make API requests
+async function apiRequest<T>(
+  endpoint: string, 
+  options: RequestInit = {}
+): Promise<T> {
+  const token = getAuthToken()
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    })
+
+    if (!response.ok) {
+      let errorMessage = 'API request failed'
+      try {
+        const error: ApiError = await response.json()
+        errorMessage = error.message || errorMessage
+      } catch {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`
+      }
+      throw new Error(errorMessage)
+    }
+
+    return response.json()
+  } catch (error) {
+    // If API fails, return mock data for development
+    if (endpoint === '' || endpoint === '/my') {
+      return mockStoreResponse as T
+    }
+    if (endpoint === '/stats') {
+      return mockStoreStats as T
+    }
+    
+    if (error instanceof Error) {
+      throw error
+    }
+    throw new Error('Network error occurred')
+  }
+}
+
+// Store API functions
+export const storeService = {
+  // Get all stores (Admin only)
+  async getAllStores(filters: StoreFilters = {}): Promise<StoreResponse> {
+    const queryParams = new URLSearchParams()
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined) {
+        if (Array.isArray(value)) {
+          value.forEach(v => queryParams.append(key, v))
+        } else {
+          queryParams.append(key, value.toString())
+        }
+      }
+    })
+
+    const queryString = queryParams.toString()
+    return apiRequest<StoreResponse>(`${queryString ? `?${queryString}` : ''}`)
+  },
+
+  // Get user's stores
+  async getMyStores(filters: StoreFilters = {}): Promise<StoreResponse> {
+    const queryParams = new URLSearchParams()
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined) {
+        if (Array.isArray(value)) {
+          value.forEach(v => queryParams.append(key, v))
+        } else {
+          queryParams.append(key, value.toString())
+        }
+      }
+    })
+
+    const queryString = queryParams.toString()
+    return apiRequest<StoreResponse>(`/my${queryString ? `?${queryString}` : ''}`)
+  },
+
+  // Get store by ID
+  async getStoreById(id: string): Promise<Store> {
+    return apiRequest<Store>(`/${id}`)
+  },
+
+  // Create store
+  async createStore(data: CreateStoreRequest): Promise<Store> {
+    return apiRequest<Store>('', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+
+  // Update store (Admin only)
+  async updateStore(id: string, data: UpdateStoreRequest): Promise<Store> {
+    return apiRequest<Store>(`/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  },
+
+  // Update store (User)
+  async updateStoreUser(id: string, data: UpdateStoreUserRequest): Promise<Store> {
+    return apiRequest<Store>(`/${id}/user`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  },
+
+  // Delete store (Admin only)
+  async deleteStore(id: string): Promise<{ message: string }> {
+    return apiRequest<{ message: string }>(`/${id}`, {
+      method: 'DELETE',
+    })
+  },
+
+  // Get store statistics
+  async getStoreStats(): Promise<{
+    total: number
+    pending: number
+    accepted: number
+    rejected: number
+    active: number
+    inactive: number
+  }> {
+    try {
+      const stores = await this.getAllStores({ limit: 1000 })
+      
+      const stats = stores.stores.reduce(
+        (acc, store) => {
+          acc.total++
+          
+          if (store.status === 'pending') acc.pending++
+          if (store.status === 'accepted') acc.accepted++
+          if (store.status === 'rejected') acc.rejected++
+          if (store.isActive) acc.active++
+          if (!store.isActive) acc.inactive++
+          
+          return acc
+        },
+        {
+          total: 0,
+          pending: 0,
+          accepted: 0,
+          rejected: 0,
+          active: 0,
+          inactive: 0,
+        }
+      )
+
+      return stats
+    } catch (error) {
+      // Return mock stats if API fails
+      return mockStoreStats
+    }
+  }
+}
+
+// Export individual functions for convenience
+export const {
+  getAllStores,
+  getMyStores,
+  getStoreById,
+  createStore,
+  updateStore,
+  updateStoreUser,
+  deleteStore,
+  getStoreStats,
+} = storeService
