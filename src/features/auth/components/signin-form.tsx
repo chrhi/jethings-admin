@@ -55,7 +55,7 @@ function SignInFormContent() {
   };
 
   return (
-    <Card className="w-full shadow-none border-0 bg-background/80 backdrop-blur-sm">
+    <Card className="w-full shadow-none border">
       <CardHeader className="space-y-1 pb-6">
         <CardTitle className="text-2xl font-bold text-center">
           Bon retour

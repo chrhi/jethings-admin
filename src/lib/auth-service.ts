@@ -9,6 +9,7 @@ export interface User {
   description?: string
   roles: string[]
   isEmailVerified: boolean
+  isActive: boolean
   lastActivity?: string
   createdAt: string
   updatedAt: string

@@ -1,4 +1,5 @@
-export { KPICards } from "./components/kpi-cards"
+export { default as KPICards } from "./components/kpi-cards"
+export { default as UserActivityChart } from "./components/user-activity-chart"
 export { 
   UserGrowthChart, 
   RoleDistributionChart, 

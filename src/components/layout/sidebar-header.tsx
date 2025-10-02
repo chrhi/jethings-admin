@@ -10,7 +10,7 @@ import {
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
-import { Settings, LogOut, User, BookOpen } from "lucide-react";
+import { Settings, LogOut, User, BookOpen, Search } from "lucide-react";
 import { ThemeToggle } from "../ui/theme-toggle";
 import GlobalSearch from "../global-search";
 import { useAuth } from "@/contexts/auth-context";
@@ -39,18 +39,22 @@ export default function OurSidebarHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 flex h-14 items-center gap-2 px-4 justify-between bg-background border-b">
-      <div className="flex items-center gap-2">
+    <header className="sticky top-0 z-50 flex h-14 items-center gap-1 px-2 sm:gap-2 sm:px-4 justify-between bg-background ">
+      <div className="flex items-center gap-1 sm:gap-2">
         <SidebarTrigger />
       </div>
       
-      <div className="flex items-center gap-2">
-        <GlobalSearch />
-        <ThemeToggle />
+      <div className="flex items-center gap-1 sm:gap-2">
+        <div className="hidden sm:block">
+          <GlobalSearch />
+        </div>
+        <div className="hidden sm:block">
+          <ThemeToggle />
+        </div>
         
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+            <Button variant="ghost" className="relative h-8 w-8 rounded-sm">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user?.avatarUrl || "/avatars/user.png"} alt={user?.firstName || "User"} />
                 <AvatarFallback>
@@ -72,6 +76,21 @@ export default function OurSidebarHeader() {
               <DropdownMenuSeparator />
             </>
           )}
+          
+          {/* Mobile-only Search option */}
+          <div className="block sm:hidden">
+            <DropdownMenuItem onClick={() => {
+              // Trigger global search programmatically
+              const searchButton = document.querySelector('[data-search-trigger]') as HTMLElement;
+              if (searchButton) {
+                searchButton.click();
+              }
+            }}>
+              <Search className="mr-2 h-4 w-4" />
+              <span>Search</span>
+            </DropdownMenuItem>
+          </div>
+          
           <DropdownMenuItem onClick={handleProfileSettings}>
             <Settings className="mr-2 h-4 w-4" />
             <span>Profile Settings</span>
@@ -88,6 +107,17 @@ export default function OurSidebarHeader() {
               <span>Docs</span>
             </a>
           </DropdownMenuItem>
+          
+          {/* Mobile-only Theme Toggle */}
+          <div className="block sm:hidden">
+            <DropdownMenuSeparator />
+            <div className="px-2 py-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm">Theme</span>
+                <ThemeToggle />
+              </div>
+            </div>
+          </div>
           
           <DropdownMenuSeparator />
           

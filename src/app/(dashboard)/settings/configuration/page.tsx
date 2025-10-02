@@ -12,7 +12,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Breadcrumb, useBreadcrumbs } from "@/components/ui/breadcrumb"
 import { Save, Settings, Smartphone, AlertCircle, Loader2, AlertTriangle } from "lucide-react"
+import { usePathname } from "next/navigation"
 import toast from "react-hot-toast"
 import { AppConfig } from "@/types/app-config"
 import { ConfigurationSkeleton } from "./_components/configuration-skeleton"
@@ -55,6 +57,8 @@ const saveConfig = async (data: ConfigFormValues & { id?: string }): Promise<App
 
 export default function ConfigurationPage() {
   const queryClient = useQueryClient()
+  const pathname = usePathname()
+  const breadcrumbs = useBreadcrumbs(pathname)
 
  
   const { data: config, isLoading } = useQuery({
@@ -109,7 +113,8 @@ export default function ConfigurationPage() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="space-y-2">
+        <Breadcrumb items={breadcrumbs} />
         <h1 className="text-3xl font-bold tracking-tight">Configuration de l'application</h1>
         <p className="text-muted-foreground">
           Gérez les paramètres de version et de configuration de l'application mobile.
