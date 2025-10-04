@@ -14,10 +14,13 @@ export const useUsers = (filters: UserFilters = {}) => {
     
     try {
       const data = await userService.getUsers(filters);
-      setUsers(data.users);
-      setPagination(data.pagination);
+      setUsers(data?.users || []);
+      setPagination(data?.pagination || null);
     } catch (err) {
+      console.error('Error fetching users:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch users');
+      setUsers([]); // Reset to empty array on error
+      setPagination(null);
     } finally {
       setLoading(false);
     }
@@ -41,9 +44,24 @@ export const useUserStats = () => {
     
     try {
       const data = await userService.getUserStats();
-      setStats(data);
+      // Ensure the data has the expected structure with fallbacks
+      const normalizedStats: UserStats = {
+        totalUsers: data?.totalUsers || 0,
+        activeUsers: data?.activeUsers || 0,
+        verifiedUsers: data?.verifiedUsers || 0,
+        usersByRole: data?.usersByRole || {}
+      };
+      setStats(normalizedStats);
     } catch (err) {
+      console.error('Error fetching user stats:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch user stats');
+      // Set fallback stats on error
+      setStats({
+        totalUsers: 0,
+        activeUsers: 0,
+        verifiedUsers: 0,
+        usersByRole: {}
+      });
     } finally {
       setLoading(false);
     }

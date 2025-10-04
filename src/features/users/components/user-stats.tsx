@@ -36,25 +36,25 @@ export function UserStatsComponent({ stats, loading }: UserStatsProps) {
   const statsData = [
     {
       title: "Total Users",
-      value: stats.totalUsers.toLocaleString(),
+      value: stats.totalUsers?.toLocaleString() || "0",
       icon: Users,
       description: "All registered users",
     },
     {
       title: "Active Users",
-      value: stats.activeUsers.toLocaleString(),
+      value: stats.activeUsers?.toLocaleString() || "0",
       icon: UserCheck,
       description: "Currently active users",
     },
     {
       title: "Verified Users",
-      value: stats.verifiedUsers.toLocaleString(),
+      value: stats.verifiedUsers?.toLocaleString() || "0",
       icon: Mail,
       description: "Email verified users",
     },
     {
       title: "Admins",
-      value: (stats.usersByRole.admin || 0 + stats.usersByRole.super_admin || 0).toString(),
+      value: ((stats.usersByRole?.admin || 0) + (stats.usersByRole?.super_admin || 0)).toString(),
       icon: Shield,
       description: "Admin users",
     },
@@ -86,13 +86,13 @@ export function UserStatsComponent({ stats, loading }: UserStatsProps) {
 }
 
 export function RoleDistributionStats({ stats }: { stats: UserStats | null }) {
-  if (!stats) return null
+  if (!stats || !stats.usersByRole) return null
 
-  const totalUsers = stats.totalUsers
+  const totalUsers = stats.totalUsers || 0
   const roleData = Object.entries(stats.usersByRole).map(([role, count]) => ({
     role: role.replace('_', ' '),
-    count,
-    percentage: totalUsers > 0 ? ((count / totalUsers) * 100).toFixed(1) : '0',
+    count: count || 0,
+    percentage: totalUsers > 0 ? (((count || 0) / totalUsers) * 100).toFixed(1) : '0',
   }))
 
   return (

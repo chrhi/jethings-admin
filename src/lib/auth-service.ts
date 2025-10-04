@@ -37,10 +37,34 @@ export interface VerifyPasswordResetData {
   newPassword: string
 }
 
-// API request helper
+// Helper function to refresh access token
+async function refreshTokenHelper(): Promise<AuthResponse> {
+  return fetch('/api/auth/refresh-token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  }).then(response => {
+    if (!response.ok) {
+      throw new Error('Token refresh failed')
+    }
+    return response.json()
+  })
+}
+
+// Helper function to clear stored user data
+function clearUserData(): void {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('user_data')
+  }
+}
+
+// API request helper with automatic token refresh
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryCount = 0
 ): Promise<T> {
   try {
     const response = await fetch(endpoint, {
@@ -53,6 +77,24 @@ async function apiRequest<T>(
     })
 
     if (!response.ok) {
+      // If it's a 401 error and we haven't retried yet, try to refresh the token
+      if (response.status === 401 && retryCount === 0) {
+        try {
+          console.log('Access token expired, attempting to refresh...')
+          await refreshTokenHelper()
+          console.log('Token refreshed successfully, retrying request...')
+          // Retry the request once with the new token
+          return apiRequest<T>(endpoint, options, retryCount + 1)
+        } catch (refreshError) {
+          console.log('Token refresh failed:', refreshError)
+          // If refresh fails, clear stored user and redirect to signin
+          clearUserData()
+          if (typeof window !== 'undefined') {
+            window.location.href = '/signin'
+          }
+        }
+      }
+
       let errorMessage = 'API request failed'
       try {
         const error = await response.json()
@@ -92,10 +134,7 @@ export const authService = {
 
   // Refresh access token
   async refreshAccessToken(): Promise<AuthResponse> {
-    return apiRequest<AuthResponse>('/api/auth/refresh-token', {
-      method: 'POST',
-      body: JSON.stringify({}), // The refresh token is in httpOnly cookies
-    })
+    return refreshTokenHelper()
   },
 
   // Logout (revoke all tokens)
@@ -162,9 +201,7 @@ export const authService = {
 
   // Clear stored user data
   clearStoredUser(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('user_data')
-    }
+    clearUserData()
   },
 
   // Check if token needs refresh (not applicable with httpOnly cookies)

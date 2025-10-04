@@ -26,7 +26,8 @@ class UserService {
 
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    retryCount = 0
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
     const config: RequestInit = {
@@ -42,6 +43,30 @@ class UserService {
       const response = await fetch(url, config);
       
       if (!response.ok) {
+        // If it's a 401 error and we haven't retried yet, try to refresh the token
+        if (response.status === 401 && retryCount === 0) {
+          try {
+            console.log('Access token expired, attempting to refresh...')
+            await fetch('/api/auth/refresh-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              credentials: 'include',
+            })
+            console.log('Token refreshed successfully, retrying request...')
+            // Retry the request once with the new token
+            return this.makeRequest<T>(endpoint, options, retryCount + 1)
+          } catch (refreshError) {
+            console.log('Token refresh failed:', refreshError)
+            // If refresh fails, clear stored user and redirect to signin
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('user_data')
+              window.location.href = '/signin'
+            }
+          }
+        }
+
         const errorData = await response.json().catch(() => ({ message: 'An error occurred' }));
         throw new Error(errorData.message || 'Request failed');
       }

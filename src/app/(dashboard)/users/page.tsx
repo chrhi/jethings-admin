@@ -27,7 +27,7 @@ export default function UsersPage() {
     sortOrder: 'desc'
   })
 
-  const { users, loading, error, pagination, refetch } = useUsers(filters)
+  const { users = [], loading, error, pagination, refetch } = useUsers(filters)
   const { stats, loading: statsLoading } = useUserStats()
 
   const handlePageChange = (page: number) => {
