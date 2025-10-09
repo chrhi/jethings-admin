@@ -45,7 +45,7 @@ async function makeApiRequest(url: string, options: RequestInit = {}) {
 // GET /api/stores/[id] - Get store by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const token = getAuthToken(request)
   if (!token) {
@@ -55,7 +55,7 @@ export async function GET(
     )
   }
 
-  const { id } = params
+  const { id } = await params
   const apiUrl = `${BASE_URL}/stores/${id}`
 
   return makeApiRequest(apiUrl, {
@@ -68,7 +68,7 @@ export async function GET(
 // PUT /api/stores/[id] - Update store (Admin only)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const token = getAuthToken(request)
   if (!token) {
@@ -78,7 +78,7 @@ export async function PUT(
     )
   }
 
-  const { id } = params
+  const { id } = await params
   const body = await request.json()
   const apiUrl = `${BASE_URL}/stores/${id}`
 
@@ -94,7 +94,7 @@ export async function PUT(
 // DELETE /api/stores/[id] - Delete store (Admin only)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const token = getAuthToken(request)
   if (!token) {
@@ -104,7 +104,7 @@ export async function DELETE(
     )
   }
 
-  const { id } = params
+  const { id } = await params
   const apiUrl = `${BASE_URL}/stores/${id}`
 
   return makeApiRequest(apiUrl, {

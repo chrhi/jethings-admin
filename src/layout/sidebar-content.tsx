@@ -11,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { sidebarOverview, sidebarUsers, sidebarProducts, sidebarFooter } from "@/const/sidebar"
+import { sidebarOverview, sidebarUsers, sidebarProducts, sidebarAccessControl, sidebarFooter } from "@/const/sidebar"
 
 export function SidebarContent() {
   const pathname = usePathname()
@@ -68,6 +68,28 @@ export function SidebarContent() {
         <SidebarGroupContent>
           <SidebarMenu>
             {sidebarProducts.map((item) => {
+              const isActive = pathname === item.href || 
+                (item.href !== "/" && pathname.startsWith(item.href))
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton asChild isActive={isActive}>
+                    <Link href={item.href}>
+                      <item.icon />
+                      <span>{item.label}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )
+            })}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarGroup>
+        <SidebarGroupLabel>Access Control</SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {sidebarAccessControl.map((item) => {
               const isActive = pathname === item.href || 
                 (item.href !== "/" && pathname.startsWith(item.href))
               return (

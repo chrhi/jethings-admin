@@ -4,10 +4,10 @@ const BACKEND_URL = process.env.BACKEND_URL || 'https://jethings-backend.fly.dev
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
     
     // Forward the request to your backend
     const backendUrl = `${BACKEND_URL}/users/admins/${id}`

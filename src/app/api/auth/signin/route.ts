@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { setTokensInResponse } from '@/lib/api-utils';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jethings-backend.fly.dev';
 
@@ -20,28 +21,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(data, { status: response.status });
     }
 
-    // Set secure HTTP-only cookies
+    // Set tokens in response cookies using utility
     const nextResponse = NextResponse.json(data);
-    
-    // Set access token cookie (15 minutes)
-    nextResponse.cookies.set('accessToken', data.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60, // 15 minutes
-      path: '/',
-    });
-
-    // Set refresh token cookie (7 days)
-    nextResponse.cookies.set('refreshToken', data.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: '/',
-    });
-
-    return nextResponse;
+    return setTokensInResponse(nextResponse, data.accessToken, data.refreshToken);
   } catch (error) {
     console.error('Sign in API error:', error);
     return NextResponse.json(

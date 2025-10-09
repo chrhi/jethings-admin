@@ -6,15 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import toast from "react-hot-toast"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
-
-// Product Components
 import { ProductTable } from "@/features/products/product-table"
 import { createProductColumns } from "@/features/products/product-columns"
 import { ProductModal } from "@/features/products/components/product-modal"
 import { ProductStatsComponent } from "@/features/products/components/product-stats"
 import { ProductFiltersComponent } from "@/features/products/components/product-filters"
-
-// Types and Hooks
 import { Product, ProductFilters } from "@/features/products/types"
 import { useProducts, useProductStats, useProductActions } from "@/hooks/use-products"
 
@@ -34,7 +30,7 @@ export default function ProductsPage() {
   const { stats, loading: statsLoading } = useProductStats()
   const { createProduct, updateProduct, deleteProduct, loading: actionLoading } = useProductActions()
 
-  // Table columns with action handlers
+
   const columns = createProductColumns(
     (product) => {
       setSelectedProduct(product)

@@ -45,7 +45,7 @@ async function makeApiRequest(url: string, options: RequestInit = {}) {
 // PUT /api/stores/[id]/user - Update store (User)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const token = getAuthToken(request)
   if (!token) {
@@ -55,7 +55,7 @@ export async function PUT(
     )
   }
 
-  const { id } = params
+  const { id } = await params
   const body = await request.json()
   const apiUrl = `${BASE_URL}/stores/${id}/user`
 
