@@ -1,19 +1,12 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Action } from "./types"
 import { Badge } from "@/components/ui/badge"
-import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Edit, Trash2, Zap } from "lucide-react"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { MoreHorizontal, Zap, Shield, Edit, Trash2 } from "lucide-react"
+import { Action } from "./types"
+import { format } from "date-fns"
 
 export const createActionColumns = (
   onEdit?: (action: Action) => void,
@@ -21,7 +14,7 @@ export const createActionColumns = (
 ): ColumnDef<Action>[] => [
   {
     accessorKey: "code",
-    header: "Code",
+    header: "Action Code",
     cell: ({ row }) => {
       const action = row.original
       return (
@@ -65,10 +58,10 @@ export const createActionColumns = (
     accessorKey: "createdAt",
     header: "Created",
     cell: ({ row }) => {
-      const createdAt = row.getValue("createdAt") as string
+      const date = row.getValue("createdAt") as string
       return (
-        <div className="text-sm">
-          {format(new Date(createdAt), "MMM dd, yyyy")}
+        <div className="text-sm text-muted-foreground">
+          {format(new Date(date), "MMM dd, yyyy")}
         </div>
       )
     },
@@ -89,18 +82,22 @@ export const createActionColumns = (
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onEdit?.(action)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem 
-              onClick={() => onDelete?.(action)}
-              className="text-red-600"
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
+            {onEdit && (
+              <DropdownMenuItem onClick={() => onEdit(action)}>
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </DropdownMenuItem>
+            )}
+            {onDelete && (
+              <DropdownMenuItem 
+                onClick={() => onDelete(action)}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       )

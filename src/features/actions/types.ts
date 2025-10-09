@@ -24,6 +24,7 @@ export interface UpdateActionRequest {
 
 export interface ActionFilters {
   search?: string
+  resourceId?: string
   isActive?: boolean
   page?: number
   limit?: number

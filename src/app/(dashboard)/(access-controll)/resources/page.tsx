@@ -7,15 +7,13 @@ import { DataTable } from "@/components/ui/data-table"
 import { Plus, Shield } from "lucide-react"
 import toast from "react-hot-toast"
 import { useResources } from "@/hooks/use-resources"
-import { createResourceColumns, ResourceModal, ResourceFiltersComponent, ResourceActionsSheet } from "@/features/resources"
+import { createResourceColumns, ResourceModal, ResourceFiltersComponent } from "@/features/resources"
 import { Resource, ResourceFilters, CreateResourceRequest, UpdateResourceRequest } from "@/features/resources/types"
 import { useConfirmationContext } from "@/contexts/confirmation-context"
 
 export default function ResourcesPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingResource, setEditingResource] = useState<Resource | undefined>()
-  const [actionsSheetOpen, setActionsSheetOpen] = useState(false)
-  const [selectedResource, setSelectedResource] = useState<Resource | null>(null)
   const [filters, setFilters] = useState<ResourceFilters>({
     page: 1,
     limit: 10,
@@ -111,18 +109,7 @@ export default function ResourcesPage() {
     setFilters(newFilters)
   }
 
-  const handleManageActions = (resource: Resource) => {
-    setSelectedResource(resource)
-    setActionsSheetOpen(true)
-  }
-
-  const handleActionsSheetClose = () => {
-    setActionsSheetOpen(false)
-    setSelectedResource(null)
-  }
-
-
-  const columns = createResourceColumns(handleEditResource, handleDeleteResource, handleManageActions)
+  const columns = createResourceColumns(handleEditResource, handleDeleteResource)
 
   if (error) {
     return (
@@ -215,12 +202,6 @@ export default function ResourcesPage() {
         loading={actionLoading}
       />
 
-      {/* Resource Actions Sheet */}
-      <ResourceActionsSheet
-        open={actionsSheetOpen}
-        onOpenChange={handleActionsSheetClose}
-        resource={selectedResource}
-      />
     </div>
   )
 }

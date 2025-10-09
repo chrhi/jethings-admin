@@ -218,6 +218,8 @@ export default function PoliciesPage() {
         open={sheetOpen}
         onOpenChange={handleSheetClose}
         policy={selectedPolicy}
+        onEdit={handleEditPolicy}
+        onDelete={handleDeletePolicy}
       />
     </div>
   )

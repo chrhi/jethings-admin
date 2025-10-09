@@ -5,7 +5,7 @@ import { Resource } from "./types"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { Button } from "@/components/ui/button"
-import { MoreHorizontal, Edit, Trash2, Shield, Zap } from "lucide-react"
+import { MoreHorizontal, Edit, Trash2, Shield } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +17,7 @@ import {
 
 export const createResourceColumns = (
   onEdit?: (resource: Resource) => void,
-  onDelete?: (resource: Resource) => void,
-  onManageActions?: (resource: Resource) => void
+  onDelete?: (resource: Resource) => void
 ): ColumnDef<Resource>[] => [
   {
     accessorKey: "code",
@@ -71,25 +70,6 @@ export const createResourceColumns = (
         <div className="text-sm">
           {format(new Date(createdAt), "MMM dd, yyyy")}
         </div>
-      )
-    },
-  },
-  {
-    id: "manage-actions",
-    header: "Actions",
-    cell: ({ row }) => {
-      const resource = row.original
-
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onManageActions?.(resource)}
-          className="h-8 px-2"
-        >
-          <Zap className="h-4 w-4 mr-2" />
-          Manage Actions
-        </Button>
       )
     },
   },
