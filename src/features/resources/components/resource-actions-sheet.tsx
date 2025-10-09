@@ -13,6 +13,7 @@ import { ActionForm } from "@/features/actions/components/action-form"
 import { Action, CreateActionRequest, UpdateActionRequest } from "@/features/actions/types"
 import { Resource } from "@/features/resources/types"
 import { format } from "date-fns"
+import { useConfirmationContext } from "@/contexts/confirmation-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,7 @@ export function ResourceActionsSheet({
   const [editingAction, setEditingAction] = useState<Action | undefined>()
   const [actionLoading, setActionLoading] = useState(false)
 
+  const { openConfirmation } = useConfirmationContext()
   const { 
     actions, 
     loading, 
@@ -91,19 +93,26 @@ export function ResourceActionsSheet({
   }
 
   const handleDeleteAction = async (action: Action) => {
-    if (!confirm(`Are you sure you want to delete the action "${action.name}"?`)) {
-      return
-    }
-
-    try {
-      const success = await deleteAction(action.id)
-      if (success) {
-        toast.success("Action deleted successfully")
-        fetchActions({ page: 1, limit: 10 }) // Refresh the list
+    openConfirmation(
+      {
+        title: "Delete Action",
+        description: `Are you sure you want to delete the action "${action.name}"? This action cannot be undone.`,
+        variant: "destructive",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      },
+      async () => {
+        try {
+          const success = await deleteAction(action.id)
+          if (success) {
+            toast.success("Action deleted successfully")
+            fetchActions({ page: 1, limit: 10 }) // Refresh the list
+          }
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to delete action")
+        }
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete action")
-    }
+    )
   }
 
   const handleEditAction = (action: Action) => {

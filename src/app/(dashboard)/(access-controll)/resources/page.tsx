@@ -9,6 +9,7 @@ import toast from "react-hot-toast"
 import { useResources } from "@/hooks/use-resources"
 import { createResourceColumns, ResourceModal, ResourceFiltersComponent, ResourceActionsSheet } from "@/features/resources"
 import { Resource, ResourceFilters, CreateResourceRequest, UpdateResourceRequest } from "@/features/resources/types"
+import { useConfirmationContext } from "@/contexts/confirmation-context"
 
 export default function ResourcesPage() {
   const [modalOpen, setModalOpen] = useState(false)
@@ -21,6 +22,7 @@ export default function ResourcesPage() {
   })
   const [actionLoading, setActionLoading] = useState(false)
 
+  const { openConfirmation } = useConfirmationContext()
   const { 
     resources, 
     loading, 
@@ -73,19 +75,26 @@ export default function ResourcesPage() {
   }
 
   const handleDeleteResource = async (resource: Resource) => {
-    if (!confirm(`Are you sure you want to delete the resource "${resource.name}"?`)) {
-      return
-    }
-
-    try {
-      const success = await deleteResource(resource.id)
-      if (success) {
-        toast.success("Resource deleted successfully")
-        fetchResources(filters) // Refresh the list
+    openConfirmation(
+      {
+        title: "Delete Resource",
+        description: `Are you sure you want to delete the resource "${resource.name}"? This action cannot be undone.`,
+        variant: "destructive",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      },
+      async () => {
+        try {
+          const success = await deleteResource(resource.id)
+          if (success) {
+            toast.success("Resource deleted successfully")
+            fetchResources(filters) // Refresh the list
+          }
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to delete resource")
+        }
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete resource")
-    }
+    )
   }
 
   const handleEditResource = (resource: Resource) => {

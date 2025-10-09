@@ -31,7 +31,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Check if user is already authenticated on mount
     const initializeAuth = async () => {
       try {
-        // First check if user is authenticated
+        // First check if user is authenticated (this now validates tokens)
         const isAuth = await authService.isAuthenticated();
         console.log('Authentication check result:', isAuth);
         
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         // Try to get current user data from server
+        // This will now automatically refresh tokens if needed
         console.log('No stored user, fetching from server...');
         const currentUser = await authService.getCurrentUser();
         console.log('Got current user from server:', currentUser);
@@ -60,9 +61,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         authService.setStoredUser(currentUser);
       } catch (error) {
         console.log('Failed to initialize auth:', error);
-        // If getting current user fails, clear stored data
-        authService.clearStoredUser();
-        setUser(null);
+        // Only clear stored data if it's a definitive auth failure
+        // Don't clear on network errors or temporary issues
+        if (error instanceof Error && error.message.includes('Authentication failed')) {
+          authService.clearStoredUser();
+          setUser(null);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -70,6 +74,32 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     initializeAuth();
   }, []);
+
+  // Proactive token refresh to prevent expiration during active sessions
+  useEffect(() => {
+    if (!user) return;
+
+    // Refresh token every 12 minutes (before 15min expiration)
+    const refreshInterval = setInterval(async () => {
+      try {
+        console.log('Proactive token refresh...');
+        await authService.refreshAccessToken();
+        console.log('Proactive token refresh successful');
+      } catch (error) {
+        console.log('Proactive token refresh failed:', error);
+        // If refresh fails, clear user and redirect to signin
+        setUser(null);
+        authService.clearStoredUser();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/signin';
+        }
+      }
+    }, 12 * 60 * 1000); // 12 minutes
+
+    return () => {
+      clearInterval(refreshInterval);
+    };
+  }, [user]);
 
   const signIn = async (data: SignInData) => {
     try {

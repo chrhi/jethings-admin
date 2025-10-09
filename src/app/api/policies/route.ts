@@ -3,12 +3,14 @@ import { makeApiRequest } from '@/lib/api-utils'
 
 export async function GET(request: NextRequest) {
   try {
-    // Use makeApiRequest helper which includes automatic token refresh
-    return await makeApiRequest('/users/me', request, {
-      method: 'GET',
-    })
+    // Get query parameters
+    const { searchParams } = new URL(request.url)
+    const queryString = searchParams.toString()
+    
+    const endpoint = `/policies${queryString ? `?${queryString}` : ''}`
+    return await makeApiRequest(endpoint, request, { method: 'GET' })
   } catch (error) {
-    console.error('Error fetching current user:', error)
+    console.error('Error fetching policies:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
@@ -16,17 +18,15 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    
-    // Use makeApiRequest helper which includes automatic token refresh
-    return await makeApiRequest('/users/me', request, {
-      method: 'PUT',
+    return await makeApiRequest('/policies', request, {
+      method: 'POST',
       body: JSON.stringify(body),
     })
   } catch (error) {
-    console.error('Error updating current user:', error)
+    console.error('Error creating policy:', error)
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }
