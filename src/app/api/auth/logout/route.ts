@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getTokensFromRequest, clearTokensInResponse } from '@/lib/api-utils';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jethings-backend.fly.dev';
 
 export async function POST(request: NextRequest) {
   try {
-    const accessToken = request.cookies.get('accessToken')?.value;
+    const { accessToken, refreshToken } = getTokensFromRequest(request);
     
     if (!accessToken) {
       return NextResponse.json(
@@ -13,36 +14,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Prepare headers for backend request
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${accessToken}`,
+    };
+    
+    if (refreshToken) {
+      headers['x-refresh-token'] = refreshToken;
+    }
+
     const response = await fetch(`${API_BASE_URL}/auth/logout`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`,
-      },
+      headers,
     });
 
     const data = await response.json();
 
     // Clear cookies regardless of API response
     const nextResponse = NextResponse.json(data, { status: response.status });
-    
-    nextResponse.cookies.set('accessToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0,
-      path: '/',
-    });
-
-    nextResponse.cookies.set('refreshToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0,
-      path: '/',
-    });
-
-    return nextResponse;
+    return clearTokensInResponse(nextResponse);
   } catch (error) {
     console.error('Logout API error:', error);
     
@@ -52,22 +43,6 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
     
-    nextResponse.cookies.set('accessToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0,
-      path: '/',
-    });
-
-    nextResponse.cookies.set('refreshToken', '', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 0,
-      path: '/',
-    });
-
-    return nextResponse;
+    return clearTokensInResponse(nextResponse);
   }
 }

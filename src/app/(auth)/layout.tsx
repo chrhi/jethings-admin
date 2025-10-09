@@ -24,25 +24,7 @@ export default function AuthLayout({
           </div>
 
           <div className="relative z-10 flex flex-col items-center justify-center p-12 w-full max-w-xl mx-auto">
-            {/* Logo and Title */}
-            <div className="space-y-6 text-center mb-12">
-              <div className="relative group">
-                <div className="absolute inset-0 bg-primary/20 rounded-3xl blur-xl group-hover:bg-primary/30 transition-all duration-300"></div>
-                <div className="relative w-24 h-24 mx-auto bg-gradient-to-br from-primary to-primary/60 rounded-3xl flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-transform duration-300">
-                  <img src="/logo.png" alt="Jethings" className="w-14 h-14" />
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-                  Jethings Admin
-                </h1>
-                <p className="text-xl text-muted-foreground max-w-md mx-auto leading-relaxed">
-                  Plateforme d'administration complète pour gérer votre écosystème
-                </p>
-              </div>
-            </div>
-
+       
             {/* Feature Cards */}
             <div className="grid grid-cols-2 gap-4 w-full mb-8">
               <div className="bg-background/50 backdrop-blur-sm rounded-2xl p-5 border border-primary/10 hover:border-primary/30 transition-all duration-300 hover:shadow-lg group">
