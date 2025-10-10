@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect } from "react"
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -15,9 +14,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Breadcrumb, useBreadcrumbs } from "@/components/ui/breadcrumb"
 import { Save, Settings, Smartphone, AlertCircle, Loader2, AlertTriangle } from "lucide-react"
 import { usePathname } from "next/navigation"
-import toast from "react-hot-toast"
-import { AppConfig } from "@/types/app-config"
 import { ConfigurationSkeleton } from "./_components/configuration-skeleton"
+import { useAppConfigQuery, useCreateOrUpdateAppConfigMutation } from "@/features/app-config"
+import { CreateAppConfigRequest } from "@/features/app-config/types"
 
 const configSchema = z.object({
   min_version: z.string().min(1, "La version minimale est requise"),
@@ -28,46 +27,14 @@ const configSchema = z.object({
 
 type ConfigFormValues = z.infer<typeof configSchema>
 
-
-const fetchConfig = async (): Promise<AppConfig> => {
-  const response = await fetch('/api/app-config')
-  if (!response.ok) {
-    throw new Error('Failed to fetch configuration')
-  }
-  return response.json()
-}
-
-const saveConfig = async (data: ConfigFormValues & { id?: string }): Promise<AppConfig> => {
-  const method = data.id ? 'PUT' : 'POST'
-  const response = await fetch('/api/app-config', {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.error || 'Failed to save configuration')
-  }
-
-  return response.json()
-}
-
 export default function ConfigurationPage() {
-  const queryClient = useQueryClient()
   const pathname = usePathname()
   const breadcrumbs = useBreadcrumbs(pathname)
 
- 
-  const { data: config, isLoading } = useQuery({
-    queryKey: ['app-config'],
-    queryFn: fetchConfig,
-    retry: 1,
-  })
+  // Use React Query hooks
+  const { data: config, isLoading } = useAppConfigQuery()
+  const mutation = useCreateOrUpdateAppConfigMutation()
 
-  
   const form = useForm<ConfigFormValues>({
     resolver: zodResolver(configSchema),
     mode: "onChange",
@@ -79,7 +46,7 @@ export default function ConfigurationPage() {
     },
   })
 
-
+  // Update form when config data loads
   useEffect(() => {
     if (config) {
       form.reset({
@@ -91,20 +58,8 @@ export default function ConfigurationPage() {
     }
   }, [config, form])
 
-
-  const mutation = useMutation({
-    mutationFn: (data: ConfigFormValues) => saveConfig({ ...data, id: config?.id }),
-    onSuccess: (updatedConfig) => {
-      queryClient.setQueryData(['app-config'], updatedConfig)
-      toast.success("Configuration mise à jour avec succès")
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || "Erreur lors de la sauvegarde")
-    },
-  })
-
   const onSubmit = (data: ConfigFormValues) => {
-    mutation.mutate(data)
+    mutation.mutate(data as CreateAppConfigRequest)
   }
 
   if (isLoading) {

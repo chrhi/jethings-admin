@@ -19,8 +19,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Policy, Resource, Action } from "../types"
-import { useResources } from "@/hooks/use-resources"
-import { useActions } from "@/hooks/use-actions"
+import { useResourcesQuery } from "@/features/resources/hooks"
+import { useActionsQuery } from "@/features/actions/hooks"
 
 const policySchema = z.object({
   resourceId: z.string().min(1, "Resource is required"),
@@ -45,13 +45,18 @@ export function PolicyForm({
   onCancel, 
   loading = false,
 }: PolicyFormProps) {
-  const [resources, setResources] = useState<Resource[]>([])
-  const [actions, setActions] = useState<Action[]>([])
-  const [loadingResources, setLoadingResources] = useState(false)
-  const [loadingActions, setLoadingActions] = useState(false)
-
-  const { fetchResources, resources: allResources } = useResources()
-  const { fetchActions, actions: allActions } = useActions()
+  // Use React Query to fetch resources and actions
+  const { data: resourcesData, isLoading: loadingResources } = useResourcesQuery({ 
+    page: 1, 
+    limit: 100 
+  })
+  const { data: actionsData, isLoading: loadingActions } = useActionsQuery({ 
+    page: 1, 
+    limit: 100 
+  })
+  
+  const resources = resourcesData?.data || []
+  const actions = actionsData?.data || []
 
   const form = useForm({
     resolver: zodResolver(policySchema),
@@ -64,36 +69,6 @@ export function PolicyForm({
     },
   })
 
-  // Fetch resources and actions for dropdowns
-  useEffect(() => {
-    const loadData = async () => {
-      setLoadingResources(true)
-      setLoadingActions(true)
-      
-      try {
-        await Promise.all([
-          fetchResources({ page: 1, limit: 100 }),
-          fetchActions({ page: 1, limit: 100 })
-        ])
-      } catch (error) {
-        console.error('Error loading resources/actions:', error)
-      } finally {
-        setLoadingResources(false)
-        setLoadingActions(false)
-      }
-    }
-
-    loadData()
-  }, [fetchResources, fetchActions])
-
-  // Update local state when hooks data changes
-  useEffect(() => {
-    setResources(allResources)
-  }, [allResources])
-
-  useEffect(() => {
-    setActions(allActions)
-  }, [allActions])
 
   const handleSubmit = (data: PolicyFormData) => {
     onSubmit(data)

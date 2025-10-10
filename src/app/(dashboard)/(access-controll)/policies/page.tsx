@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DataTable } from "@/components/ui/data-table"
 import { Plus, FileText } from "lucide-react"
 import toast from "react-hot-toast"
-import { usePolicies } from "@/hooks/use-policies"
+import { usePoliciesQuery, useCreatePolicyMutation, useUpdatePolicyMutation, useDeletePolicyMutation } from "@/features/policies/hooks"
 import { createPolicyColumns, PolicyModal, PolicyFiltersComponent, PolicySheet } from "@/features/policies"
 import { Policy, PolicyFilters, CreatePolicyRequest, UpdatePolicyRequest } from "@/features/policies/types"
 import { useConfirmationContext } from "@/contexts/confirmation-context"
@@ -23,30 +23,21 @@ export default function PoliciesPage() {
   const [actionLoading, setActionLoading] = useState(false)
 
   const { openConfirmation } = useConfirmationContext()
-  const { 
-    policies, 
-    loading, 
-    error, 
-    pagination, 
-    fetchPolicies, 
-    createPolicy, 
-    updatePolicy, 
-    deletePolicy 
-  } = usePolicies()
-
-  useEffect(() => {
-    fetchPolicies(filters)
-  }, [filters])
+  
+  // Use React Query hooks
+  const { data: policiesData, isLoading: loading, error } = usePoliciesQuery(filters)
+  const createPolicyMutation = useCreatePolicyMutation()
+  const updatePolicyMutation = useUpdatePolicyMutation()
+  const deletePolicyMutation = useDeletePolicyMutation()
+  
+  const policies = policiesData?.data || []
+  const pagination = policiesData?.pagination || { total: 0, page: 1, limit: 10, totalPages: 0 }
 
   const handleCreatePolicy = async (data: CreatePolicyRequest) => {
     setActionLoading(true)
     try {
-      const result = await createPolicy(data)
-      if (result) {
-        toast.success("Policy created successfully")
-        setModalOpen(false)
-        fetchPolicies(filters) // Refresh the list
-      }
+      await createPolicyMutation.mutateAsync(data)
+      setModalOpen(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create policy")
     } finally {
@@ -59,13 +50,9 @@ export default function PoliciesPage() {
 
     setActionLoading(true)
     try {
-      const result = await updatePolicy(editingPolicy.id, data)
-      if (result) {
-        toast.success("Policy updated successfully")
-        setModalOpen(false)
-        setEditingPolicy(undefined)
-        fetchPolicies(filters) 
-      }
+      await updatePolicyMutation.mutateAsync({ id: editingPolicy.id, data })
+      setModalOpen(false)
+      setEditingPolicy(undefined)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update policy")
     } finally {
@@ -84,11 +71,7 @@ export default function PoliciesPage() {
       },
       async () => {
         try {
-          const success = await deletePolicy(policy.id)
-          if (success) {
-            toast.success("Policy deleted successfully")
-            fetchPolicies(filters) // Refresh the list
-          }
+          await deletePolicyMutation.mutateAsync(policy.id)
         } catch (err) {
           toast.error(err instanceof Error ? err.message : "Failed to delete policy")
         }
@@ -128,10 +111,10 @@ export default function PoliciesPage() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription>{error.message || 'An error occurred'}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => fetchPolicies(filters)}>
+            <Button onClick={() => window.location.reload()}>
               Try Again
             </Button>
           </CardContent>

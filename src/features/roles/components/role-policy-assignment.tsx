@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Shield, Zap, Search } from "lucide-react"
 import { Role } from "../types"
 import { CreateRolePolicyRequest } from "../types/role-policy"
-import { useRolePolicies } from "@/hooks/use-role-policies"
-import { usePolicies } from "@/hooks/use-policies"
+import { useRolePoliciesByRoleQuery, useCreateRolePolicyMutation, useDeleteRolePolicyMutation } from "../role-policies-hooks"
+import { usePoliciesQuery } from "@/features/policies/hooks"
 import { Policy } from "@/features/policies/types"
 import toast from "react-hot-toast"
 
@@ -20,23 +20,13 @@ export function RolePolicyAssignment({ role }: RolePolicyAssignmentProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [isToggling, setIsToggling] = useState<string | null>(null)
   
-  const { 
-    rolePolicies, 
-    loading: rolePoliciesLoading,
-    fetchRolePoliciesByRole, 
-    createRolePolicy, 
-    deleteRolePolicy 
-  } = useRolePolicies()
+  // React Query hooks
+  const { data: rolePolicies = [], isLoading: rolePoliciesLoading } = useRolePoliciesByRoleQuery(role.id)
+  const { data: policiesData, isLoading: policiesLoading } = usePoliciesQuery({ page: 1, limit: 1000 })
+  const createRolePolicyMutation = useCreateRolePolicyMutation()
+  const deleteRolePolicyMutation = useDeleteRolePolicyMutation()
   
-  const { policies, loading: policiesLoading, fetchPolicies } = usePolicies()
-
-  useEffect(() => {
-    fetchRolePoliciesByRole(role.id)
-  }, [role.id, fetchRolePoliciesByRole])
-
-  useEffect(() => {
-    fetchPolicies({ page: 1, limit: 1000 }) // Fetch all policies
-  }, [fetchPolicies])
+  const policies = policiesData?.data || []
 
   const handleTogglePolicy = async (policy: Policy, isAssigned: boolean) => {
     setIsToggling(policy.id)
@@ -46,9 +36,7 @@ export function RolePolicyAssignment({ role }: RolePolicyAssignmentProps) {
         // Find the role-policy assignment and delete it
         const assignment = rolePolicies.find(rp => rp.policyId === policy.id)
         if (assignment) {
-          await deleteRolePolicy(assignment.id)
-          toast.success("Policy unassigned successfully")
-          fetchRolePoliciesByRole(role.id) // Refresh
+          await deleteRolePolicyMutation.mutateAsync(assignment.id)
         }
       } else {
         // Create new assignment
@@ -57,12 +45,10 @@ export function RolePolicyAssignment({ role }: RolePolicyAssignmentProps) {
           policyId: policy.id,
           isActive: true
         }
-        await createRolePolicy(data)
-        toast.success("Policy assigned successfully")
-        fetchRolePoliciesByRole(role.id) // Refresh
+        await createRolePolicyMutation.mutateAsync(data)
       }
     } catch (error) {
-      toast.error(isAssigned ? "Failed to unassign policy" : "Failed to assign policy")
+      // Error handling is done in the mutations
     } finally {
       setIsToggling(null)
     }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DataTable } from "@/components/ui/data-table"
 import { Plus, Lock } from "lucide-react"
 import toast from "react-hot-toast"
-import { useRoles } from "@/hooks/use-roles"
+import { useRolesQuery, useCreateRoleMutation, useUpdateRoleMutation, useDeleteRoleMutation } from "@/features/roles/hooks"
 import { createRoleColumns, RoleModal, RoleFiltersComponent, RoleSheet } from "@/features/roles"
 import { Role, RoleFilters, CreateRoleRequest, UpdateRoleRequest } from "@/features/roles/types"
 import { useConfirmationContext } from "@/contexts/confirmation-context"
@@ -23,30 +23,21 @@ export default function RolesPage() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
 
   const { openConfirmation } = useConfirmationContext()
-  const {
-    roles,
-    loading,
-    error,
-    pagination,
-    fetchRoles,
-    createRole,
-    updateRole,
-    deleteRole
-  } = useRoles()
-
-  useEffect(() => {
-    fetchRoles(filters)
-  }, [filters])
+  
+  // Use React Query hooks
+  const { data: rolesData, isLoading: loading, error } = useRolesQuery(filters)
+  const createRoleMutation = useCreateRoleMutation()
+  const updateRoleMutation = useUpdateRoleMutation()
+  const deleteRoleMutation = useDeleteRoleMutation()
+  
+  const roles = rolesData?.data || []
+  const pagination = rolesData?.pagination || { total: 0, page: 1, limit: 10, totalPages: 0 }
 
   const handleCreateRole = async (data: CreateRoleRequest) => {
     setActionLoading(true)
     try {
-      const result = await createRole(data)
-      if (result) {
-        toast.success("Role created successfully")
-        setModalOpen(false)
-        fetchRoles(filters) // Refresh the list
-      }
+      await createRoleMutation.mutateAsync(data)
+      setModalOpen(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create role")
     } finally {
@@ -58,13 +49,9 @@ export default function RolesPage() {
     if (!editingRole) return
     setActionLoading(true)
     try {
-      const result = await updateRole(editingRole.id, data)
-      if (result) {
-        toast.success("Role updated successfully")
-        setModalOpen(false)
-        setEditingRole(undefined)
-        fetchRoles(filters) // Refresh the list
-      }
+      await updateRoleMutation.mutateAsync({ id: editingRole.id, data })
+      setModalOpen(false)
+      setEditingRole(undefined)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update role")
     } finally {
@@ -82,17 +69,10 @@ export default function RolesPage() {
         cancelText: "Cancel",
       },
       async () => {
-        setActionLoading(true)
         try {
-          const success = await deleteRole(role.id)
-          if (success) {
-            toast.success("Role deleted successfully")
-            fetchRoles(filters) // Refresh the list
-          }
+          await deleteRoleMutation.mutateAsync(role.id)
         } catch (err) {
           toast.error(err instanceof Error ? err.message : "Failed to delete role")
-        } finally {
-          setActionLoading(false)
         }
       }
     )

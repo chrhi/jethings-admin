@@ -26,9 +26,12 @@ export default function ProductsPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [productToDelete, setProductToDelete] = useState<Product | undefined>()
 
-  const { products, loading, refetch } = useProducts(filters)
-  const { stats, loading: statsLoading } = useProductStats()
+  const { data: productsData, isLoading: loading, refetch } = useProducts(filters)
+  const { data: stats, isLoading: statsLoading } = useProductStats()
   const { createProduct, updateProduct, deleteProduct, loading: actionLoading } = useProductActions()
+
+  // Extract products from the response
+  const products = productsData?.products || []
 
 
   const columns = createProductColumns(
@@ -128,7 +131,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Stats */}
-      <ProductStatsComponent stats={stats} loading={statsLoading} />
+      <ProductStatsComponent stats={stats || undefined} loading={statsLoading} />
 
       {/* Filters and Table */}
       <Card className="rounded-sm">

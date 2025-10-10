@@ -1,12 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTable } from "@/components/ui/data-table"
 import { Plus, Zap } from "lucide-react"
-import toast from "react-hot-toast"
-import { useActions } from "@/hooks/use-actions"
+import { 
+  useActionsQuery, 
+  useCreateActionMutation, 
+  useUpdateActionMutation, 
+  useDeleteActionMutation 
+} from "@/features/actions/hooks"
 import { createActionColumns, ActionModal, ActionFiltersComponent } from "@/features/actions"
 import { Action, ActionFilters, CreateActionRequest, UpdateActionRequest } from "@/features/actions/types"
 import { useConfirmationContext } from "@/contexts/confirmation-context"
@@ -18,56 +22,41 @@ export default function ActionsPage() {
     page: 1,
     limit: 10,
   })
-  const [actionLoading, setActionLoading] = useState(false)
 
   const { openConfirmation } = useConfirmationContext()
-  const { 
-    actions, 
-    loading, 
-    error, 
-    pagination, 
-    fetchActions, 
-    createAction, 
-    updateAction, 
-    deleteAction 
-  } = useActions()
+  
+  // React Query hooks
+  const { data: actionsData, isLoading, error, refetch } = useActionsQuery(filters)
+  const createActionMutation = useCreateActionMutation()
+  const updateActionMutation = useUpdateActionMutation()
+  const deleteActionMutation = useDeleteActionMutation()
 
-  useEffect(() => {
-    fetchActions(filters)
-  }, [filters])
+  const actions = actionsData?.data || []
+  const pagination = actionsData ? {
+    total: actionsData.total,
+    page: actionsData.page,
+    limit: actionsData.limit,
+    totalPages: actionsData.totalPages,
+  } : null
 
   const handleCreateAction = async (data: CreateActionRequest) => {
-    setActionLoading(true)
     try {
-      const result = await createAction(data)
-      if (result) {
-        toast.success("Action created successfully")
-        setModalOpen(false)
-        fetchActions(filters) // Refresh the list
-      }
+      await createActionMutation.mutateAsync(data)
+      setModalOpen(false)
     } catch (error) {
-      toast.error("Failed to create action")
-    } finally {
-      setActionLoading(false)
+      // Error handling is done in the mutation
     }
   }
 
   const handleUpdateAction = async (data: UpdateActionRequest) => {
     if (!editingAction) return
 
-    setActionLoading(true)
     try {
-      const result = await updateAction(editingAction.id, data)
-      if (result) {
-        toast.success("Action updated successfully")
-        setModalOpen(false)
-        setEditingAction(undefined)
-        fetchActions(filters) // Refresh the list
-      }
+      await updateActionMutation.mutateAsync({ id: editingAction.id, data })
+      setModalOpen(false)
+      setEditingAction(undefined)
     } catch (error) {
-      toast.error("Failed to update action")
-    } finally {
-      setActionLoading(false)
+      // Error handling is done in the mutation
     }
   }
 
@@ -82,13 +71,9 @@ export default function ActionsPage() {
       },
       async () => {
         try {
-          const success = await deleteAction(action.id)
-          if (success) {
-            toast.success("Action deleted successfully")
-            fetchActions(filters) // Refresh the list
-          }
+          await deleteActionMutation.mutateAsync(action.id)
         } catch (error) {
-          toast.error("Failed to delete action")
+          // Error handling is done in the mutation
         }
       }
     )
@@ -141,7 +126,7 @@ export default function ActionsPage() {
           <ActionFiltersComponent
             filters={filters}
             onFiltersChange={handleFiltersChange}
-            loading={loading}
+            loading={isLoading}
           />
         </CardContent>
       </Card>
@@ -158,11 +143,11 @@ export default function ActionsPage() {
           <DataTable
             columns={columns}
             data={actions}
-            loading={loading}
+            loading={isLoading}
           />
           
           {/* Simple pagination indicator */}
-          {!loading && actions.length > 0 && (
+          {!isLoading && actions.length > 0 && pagination && (
             <div className="flex items-center justify-center pt-4">
               <p className="text-sm text-muted-foreground">
                 Showing {actions.length} of {pagination.total} actions
@@ -178,7 +163,7 @@ export default function ActionsPage() {
         onOpenChange={handleModalClose}
         action={editingAction}
         onSubmit={editingAction ? handleUpdateAction : handleCreateAction}
-        loading={actionLoading}
+        loading={createActionMutation.isPending || updateActionMutation.isPending}
       />
     </div>
   )

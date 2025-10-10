@@ -1,3 +1,7 @@
+/**
+ * @deprecated This API route is deprecated. Use useUserStatsQuery() from @/features/users/hooks instead.
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 
 const BACKEND_URL = process.env.BACKEND_URL || 'https://jethings-backend.fly.dev'

@@ -1,12 +1,16 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DataTable } from "@/components/ui/data-table"
 import { Plus, Shield } from "lucide-react"
-import toast from "react-hot-toast"
-import { useResources } from "@/hooks/use-resources"
+import { 
+  useResourcesQuery, 
+  useCreateResourceMutation, 
+  useUpdateResourceMutation, 
+  useDeleteResourceMutation 
+} from "@/features/resources/hooks"
 import { createResourceColumns, ResourceModal, ResourceFiltersComponent } from "@/features/resources"
 import { Resource, ResourceFilters, CreateResourceRequest, UpdateResourceRequest } from "@/features/resources/types"
 import { useConfirmationContext } from "@/contexts/confirmation-context"
@@ -18,57 +22,41 @@ export default function ResourcesPage() {
     page: 1,
     limit: 10,
   })
-  const [actionLoading, setActionLoading] = useState(false)
 
   const { openConfirmation } = useConfirmationContext()
-  const { 
-    resources, 
-    loading, 
-    error, 
-    pagination, 
-    fetchResources, 
-    createResource, 
-    updateResource, 
-    deleteResource 
-  } = useResources()
+  
+  // React Query hooks
+  const { data: resourcesData, isLoading, error, refetch } = useResourcesQuery(filters)
+  const createResourceMutation = useCreateResourceMutation()
+  const updateResourceMutation = useUpdateResourceMutation()
+  const deleteResourceMutation = useDeleteResourceMutation()
 
- 
-  useEffect(() => {
-    fetchResources(filters)
-  }, [filters])
+  const resources = resourcesData?.data || []
+  const pagination = resourcesData ? {
+    total: resourcesData.total,
+    page: resourcesData.page,
+    limit: resourcesData.limit,
+    totalPages: resourcesData.totalPages,
+  } : null
 
   const handleCreateResource = async (data: CreateResourceRequest) => {
-    setActionLoading(true)
     try {
-      const result = await createResource(data)
-      if (result) {
-        toast.success("Resource created successfully")
-        setModalOpen(false)
-        fetchResources(filters) // Refresh the list
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create resource")
-    } finally {
-      setActionLoading(false)
+      await createResourceMutation.mutateAsync(data)
+      setModalOpen(false)
+    } catch (error) {
+      // Error handling is done in the mutation
     }
   }
 
   const handleUpdateResource = async (data: UpdateResourceRequest) => {
     if (!editingResource) return
 
-    setActionLoading(true)
     try {
-      const result = await updateResource(editingResource.id, data)
-      if (result) {
-        toast.success("Resource updated successfully")
-        setModalOpen(false)
-        setEditingResource(undefined)
-        fetchResources(filters) 
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update resource")
-    } finally {
-      setActionLoading(false)
+      await updateResourceMutation.mutateAsync({ id: editingResource.id, data })
+      setModalOpen(false)
+      setEditingResource(undefined)
+    } catch (error) {
+      // Error handling is done in the mutation
     }
   }
 
@@ -83,13 +71,9 @@ export default function ResourcesPage() {
       },
       async () => {
         try {
-          const success = await deleteResource(resource.id)
-          if (success) {
-            toast.success("Resource deleted successfully")
-            fetchResources(filters) // Refresh the list
-          }
-        } catch (err) {
-          toast.error(err instanceof Error ? err.message : "Failed to delete resource")
+          await deleteResourceMutation.mutateAsync(resource.id)
+        } catch (error) {
+          // Error handling is done in the mutation
         }
       }
     )
@@ -117,10 +101,10 @@ export default function ResourcesPage() {
         <Card className="w-96">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
-            <CardDescription>{error}</CardDescription>
+            <CardDescription>{error?.message || 'An error occurred'}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => fetchResources(filters)}>
+            <Button onClick={() => refetch()}>
               Try Again
             </Button>
           </CardContent>
@@ -162,7 +146,7 @@ export default function ResourcesPage() {
           <ResourceFiltersComponent
             filters={filters}
             onFiltersChange={handleFiltersChange}
-            loading={loading}
+            loading={isLoading}
           />
         </CardContent>
       </Card>
@@ -172,18 +156,18 @@ export default function ResourcesPage() {
         <CardHeader>
           <CardTitle>Resources</CardTitle>
           <CardDescription>
-            {pagination.total} resource{pagination.total !== 1 ? 's' : ''} found
+            {pagination?.total || 0} resource{(pagination?.total || 0) !== 1 ? 's' : ''} found
           </CardDescription>
         </CardHeader>
         <CardContent>
           <DataTable
             columns={columns}
             data={resources}
-            loading={loading}
+            loading={isLoading}
           />
           
           {/* Simple pagination indicator */}
-          {!loading && resources.length > 0 && (
+          {!isLoading && resources.length > 0 && pagination && (
             <div className="flex items-center justify-center pt-4">
               <p className="text-sm text-muted-foreground">
                 Showing {resources.length} of {pagination.total} resources
@@ -199,7 +183,7 @@ export default function ResourcesPage() {
         onOpenChange={handleModalClose}
         resource={editingResource}
         onSubmit={editingResource ? handleUpdateResource : handleCreateResource}
-        loading={actionLoading}
+        loading={createResourceMutation.isPending || updateResourceMutation.isPending}
       />
 
     </div>

@@ -1,3 +1,14 @@
+/**
+ * @deprecated This API route is deprecated. The policies feature now uses direct API calls to the backend.
+ * 
+ * The new implementation:
+ * - Calls backend API directly from React Query hooks
+ * - Eliminates the Next.js API route proxy layer
+ * - Provides better performance and simpler architecture
+ * 
+ * This file can be removed once all policies are migrated to the new React Query implementation.
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { makeApiRequest } from '@/lib/api-utils'
 

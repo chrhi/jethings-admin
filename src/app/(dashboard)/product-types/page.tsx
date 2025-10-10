@@ -31,9 +31,12 @@ export default function ProductTypesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [productTypeToDelete, setProductTypeToDelete] = useState<ProductType | undefined>()
 
-  const { productTypes, loading, refetch } = useProductTypes(filters)
+  const { data: productTypesData, isLoading: loading, refetch } = useProductTypes(filters)
   const { stats, loading: statsLoading } = useProductTypeStats()
   const { createProductType, updateProductType, deleteProductType, loading: actionLoading } = useProductTypeActions()
+
+  // Extract product types from the response
+  const productTypes = Array.isArray(productTypesData) ? productTypesData : []
 
   // Table columns with action handlers
   const columns = createColumns(

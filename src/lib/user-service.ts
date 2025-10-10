@@ -1,3 +1,20 @@
+/**
+ * @deprecated This file is deprecated. Use React Query hooks from @/features/users/hooks instead.
+ * 
+ * The new implementation provides:
+ * - Direct API calls to backend (no Next.js API route proxy)
+ * - Better error handling with React Query
+ * - Automatic caching and cache invalidation
+ * - Optimistic updates
+ * 
+ * Migration guide:
+ * - userService.getUsers() → useUsersQuery()
+ * - userService.getUserStats() → useUserStatsQuery()
+ * - userService.updateUser() → useUpdateUserMutation()
+ * - userService.deleteUser() → useDeleteUserMutation()
+ * - etc.
+ */
+
 import { 
   User, 
   UserFilters, 

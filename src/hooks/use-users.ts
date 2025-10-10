@@ -1,3 +1,20 @@
+/**
+ * @deprecated This file is deprecated. Use React Query hooks from @/features/users/hooks instead.
+ * 
+ * The new implementation provides:
+ * - Better caching with React Query
+ * - Direct API calls to backend (no Next.js API route proxy)
+ * - Automatic loading/error states
+ * - Optimistic updates
+ * - Better TypeScript inference
+ * 
+ * Migration guide:
+ * - useUsers() → useUsersQuery()
+ * - useUserStats() → useUserStatsQuery()
+ * - useCurrentUser() → useCurrentUserQuery()
+ * - useUserActions() → useUpdateUserMutation(), useDeactivateUserMutation(), etc.
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import { userService } from '@/lib/user-service';
 import { User, UserFilters, UserStats, UsersResponse, UserUpdateData } from '@/features/users/types';

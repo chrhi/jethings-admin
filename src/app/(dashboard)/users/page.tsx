@@ -7,7 +7,7 @@ import { DataTable } from "@/features/users/table"
 import { createColumns } from "@/features/users/columns"
 import { UserStatsComponent} from "@/features/users/components/user-stats"
 import { PaginationComponent } from "@/features/users/components/pagination"
-import { useUsers, useUserStats } from "@/hooks/use-users"
+import { useUsersQuery, useUserStatsQuery } from "@/features/users/hooks"
 import { UserFilters } from "@/features/users/types"
 import { Plus, Download, RefreshCw, FileSpreadsheet } from "lucide-react"
 import { exportUsersToExcel, exportUsersToCSV } from "@/lib/export-utils"
@@ -27,8 +27,11 @@ export default function UsersPage() {
     sortOrder: 'desc'
   })
 
-  const { users = [], loading, error, pagination, refetch } = useUsers(filters)
-  const { stats, loading: statsLoading } = useUserStats()
+  const { data: usersData, isLoading: loading, error, refetch } = useUsersQuery(filters)
+  const { data: stats, isLoading: statsLoading } = useUserStatsQuery()
+
+  const users = usersData?.users || []
+  const pagination = usersData?.pagination || null
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }))
@@ -115,7 +118,7 @@ export default function UsersPage() {
 
 
       {/* Stats */}
-      <UserStatsComponent stats={stats} loading={statsLoading} />
+      <UserStatsComponent stats={stats || null} loading={statsLoading} />
 
 
 
@@ -124,7 +127,7 @@ export default function UsersPage() {
         <Card className="border-destructive ">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-destructive mb-4">{error}</p>
+              <p className="text-destructive mb-4">{error.message}</p>
               <Button variant="outline" onClick={handleRefresh}>
                 Try Again
               </Button>

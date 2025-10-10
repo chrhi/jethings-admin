@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { X, Search, Filter } from "lucide-react"
 import { ActionFilters } from "../types"
-import { useResources } from "@/hooks/use-resources"
+import { useResourcesQuery } from "@/features/resources/hooks"
 
 interface ActionFiltersComponentProps {
   filters: ActionFilters
@@ -24,10 +24,14 @@ export function ActionFiltersComponent({
   const [searchTerm, setSearchTerm] = useState(filters.search || "")
   const [statusFilter, setStatusFilter] = useState(filters.isActive !== undefined ? String(filters.isActive) : "all")
   const [resourceFilter, setResourceFilter] = useState(filters.resourceId || "")
-  const [resources, setResources] = useState<any[]>([])
-  const [loadingResources, setLoadingResources] = useState(false)
 
-  const { fetchResources, resources: allResources } = useResources()
+  // Use React Query to fetch resources
+  const { data: resourcesData, isLoading: loadingResources } = useResourcesQuery({ 
+    page: 1, 
+    limit: 100 
+  })
+  
+  const resources = resourcesData?.data || []
 
   // Update local state when filters change
   useEffect(() => {
@@ -36,27 +40,6 @@ export function ActionFiltersComponent({
     setResourceFilter(filters.resourceId || "")
   }, [filters])
 
-  // Load resources for dropdown
-  useEffect(() => {
-    const loadData = async () => {
-      setLoadingResources(true)
-      
-      try {
-        await fetchResources({ page: 1, limit: 100 })
-      } catch (error) {
-        console.error('Error loading resources:', error)
-      } finally {
-        setLoadingResources(false)
-      }
-    }
-
-    loadData()
-  }, [fetchResources])
-
-  // Update local state when hooks data changes
-  useEffect(() => {
-    setResources(allResources)
-  }, [allResources])
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)

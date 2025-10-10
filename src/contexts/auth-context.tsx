@@ -106,6 +106,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('Auth context: Starting sign in');
       const response = await authService.signIn(data);
       console.log('Auth context: Sign in successful, setting user:', response.user);
+      
+      // Save tokens to localStorage for React Query API client
+      if (response.accessToken) {
+        localStorage.setItem('accessToken', response.accessToken);
+      }
+      if (response.refreshToken) {
+        localStorage.setItem('refreshToken', response.refreshToken);
+      }
+      console.log('Auth context: Tokens saved to localStorage');
+      
       setUser(response.user);
       authService.setStoredUser(response.user);
       console.log('Auth context: User set successfully');
@@ -136,6 +146,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log('Auth context: Starting logout');
       await authService.logout();
       console.log('Auth context: Logout API call successful');
+      
+      // Clear tokens from localStorage
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      console.log('Auth context: Tokens cleared from localStorage');
+      
       setUser(null);
       authService.clearStoredUser();
       console.log('Auth context: User state cleared');
@@ -151,12 +167,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const refreshToken = async () => {
     try {
       const response = await authService.refreshAccessToken();
+      
+      // Save new tokens to localStorage
+      if (response.accessToken) {
+        localStorage.setItem('accessToken', response.accessToken);
+      }
+      if (response.refreshToken) {
+        localStorage.setItem('refreshToken', response.refreshToken);
+      }
+      console.log('Auth context: Refreshed tokens saved to localStorage');
+      
       setUser(response.user);
       authService.setStoredUser(response.user);
     } catch (error) {
       // If refresh fails, user needs to sign in again
       setUser(null);
       authService.clearStoredUser();
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       throw error;
     }
   };

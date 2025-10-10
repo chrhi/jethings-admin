@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, X } from "lucide-react"
 import { PolicyFilters, Resource, Action } from "../types"
-import { useResources } from "@/hooks/use-resources"
-import { useActions } from "@/hooks/use-actions"
+import { useResourcesQuery } from "@/features/resources/hooks"
+import { useActionsQuery } from "@/features/actions/hooks"
 
 interface PolicyFiltersComponentProps {
   filters: PolicyFilters
@@ -27,14 +27,19 @@ export function PolicyFiltersComponent({
   )
   const [resourceFilter, setResourceFilter] = useState(filters.resourceId || "")
   const [actionFilter, setActionFilter] = useState(filters.actionId || "")
-  
-  const [resources, setResources] = useState<Resource[]>([])
-  const [actions, setActions] = useState<Action[]>([])
-  const [loadingResources, setLoadingResources] = useState(false)
-  const [loadingActions, setLoadingActions] = useState(false)
 
-  const { fetchResources, resources: allResources } = useResources()
-  const { fetchActions, actions: allActions } = useActions()
+  // Use React Query to fetch resources and actions
+  const { data: resourcesData, isLoading: loadingResources } = useResourcesQuery({ 
+    page: 1, 
+    limit: 100 
+  })
+  const { data: actionsData, isLoading: loadingActions } = useActionsQuery({ 
+    page: 1, 
+    limit: 100 
+  })
+  
+  const resources = resourcesData?.data || []
+  const actions = actionsData?.data || []
 
   useEffect(() => {
     setSearchTerm(filters.search || "")
@@ -43,36 +48,6 @@ export function PolicyFiltersComponent({
     setActionFilter(filters.actionId || "")
   }, [filters])
 
-  // Load resources and actions for dropdowns
-  useEffect(() => {
-    const loadData = async () => {
-      setLoadingResources(true)
-      setLoadingActions(true)
-      
-      try {
-        await Promise.all([
-          fetchResources({ page: 1, limit: 100 }),
-          fetchActions({ page: 1, limit: 100 })
-        ])
-      } catch (error) {
-        console.error('Error loading resources/actions:', error)
-      } finally {
-        setLoadingResources(false)
-        setLoadingActions(false)
-      }
-    }
-
-    loadData()
-  }, [fetchResources, fetchActions])
-
-  // Update local state when hooks data changes
-  useEffect(() => {
-    setResources(allResources)
-  }, [allResources])
-
-  useEffect(() => {
-    setActions(allActions)
-  }, [allActions])
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value)
