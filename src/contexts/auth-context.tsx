@@ -1,7 +1,15 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { authService, User, SignInData, ForgotPasswordData, VerifyPasswordResetData } from '@/lib/auth-service';
+import { User, SignInData, ForgotPasswordData, VerifyPasswordResetData } from '@/features/auth/types';
+import { 
+  useCurrentUser, 
+  useSignInMutation, 
+  useLogoutMutation, 
+  useRefreshTokenMutation,
+  useRequestPasswordResetMutation,
+  useVerifyPasswordResetMutation
+} from '@/features/auth/hooks';
 
 interface AuthContextType {
   user: User | null;
@@ -27,98 +35,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // React Query hooks
+  const { data: currentUser, isLoading: userLoading, error: userError } = useCurrentUser();
+  const signInMutation = useSignInMutation();
+  const logoutMutation = useLogoutMutation();
+  const refreshTokenMutation = useRefreshTokenMutation();
+  const requestPasswordResetMutation = useRequestPasswordResetMutation();
+  const verifyPasswordResetMutation = useVerifyPasswordResetMutation();
+
+  // Update user state when currentUser query changes
   useEffect(() => {
-    // Check if user is already authenticated on mount
-    const initializeAuth = async () => {
-      try {
-        // First check if user is authenticated (this now validates tokens)
-        const isAuth = await authService.isAuthenticated();
-        console.log('Authentication check result:', isAuth);
-        
-        if (!isAuth) {
-          console.log('User not authenticated');
-          setUser(null);
-          authService.clearStoredUser();
-          setIsLoading(false);
-          return;
-        }
+    if (currentUser) {
+      setUser(currentUser);
+      setIsLoading(false);
+    } else if (userError) {
+      setUser(null);
+      setIsLoading(false);
+    } else if (!userLoading) {
+      setIsLoading(false);
+    }
+  }, [currentUser, userError, userLoading]);
 
-        // Check for stored user data first
-        const storedUser = authService.getStoredUser();
-        if (storedUser) {
-          console.log('Found stored user:', storedUser);
-          setUser(storedUser);
-          setIsLoading(false);
-          return;
-        }
-
-        // Try to get current user data from server
-        // This will now automatically refresh tokens if needed
-        console.log('No stored user, fetching from server...');
-        const currentUser = await authService.getCurrentUser();
-        console.log('Got current user from server:', currentUser);
-        setUser(currentUser);
-        authService.setStoredUser(currentUser);
-      } catch (error) {
-        console.log('Failed to initialize auth:', error);
-        // Only clear stored data if it's a definitive auth failure
-        // Don't clear on network errors or temporary issues
-        if (error instanceof Error && error.message.includes('Authentication failed')) {
-          authService.clearStoredUser();
-          setUser(null);
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-  }, []);
-
-  // Proactive token refresh to prevent expiration during active sessions
+  // Check for stored user data on mount
   useEffect(() => {
-    if (!user) return;
-
-    // Refresh token every 12 minutes (before 15min expiration)
-    const refreshInterval = setInterval(async () => {
+    const storedUser = localStorage.getItem('user_data');
+    if (storedUser && !currentUser) {
       try {
-        console.log('Proactive token refresh...');
-        await authService.refreshAccessToken();
-        console.log('Proactive token refresh successful');
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
       } catch (error) {
-        console.log('Proactive token refresh failed:', error);
-        // If refresh fails, clear user and redirect to signin
-        setUser(null);
-        authService.clearStoredUser();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/signin';
-        }
+        localStorage.removeItem('user_data');
       }
-    }, 12 * 60 * 1000); // 12 minutes
-
-    return () => {
-      clearInterval(refreshInterval);
-    };
-  }, [user]);
+    }
+    setIsLoading(false);
+  }, [currentUser]);
 
   const signIn = async (data: SignInData) => {
     try {
       console.log('Auth context: Starting sign in');
-      const response = await authService.signIn(data);
-      console.log('Auth context: Sign in successful, setting user:', response.user);
-      
-      // Save tokens to localStorage for React Query API client
-      if (response.accessToken) {
-        localStorage.setItem('accessToken', response.accessToken);
-      }
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
-      console.log('Auth context: Tokens saved to localStorage');
-      
-      setUser(response.user);
-      authService.setStoredUser(response.user);
-      console.log('Auth context: User set successfully');
+      await signInMutation.mutateAsync(data);
+      console.log('Auth context: Sign in successful');
     } catch (error) {
       console.error('Auth context: Sign in error:', error);
       throw error;
@@ -127,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const requestPasswordReset = async (data: ForgotPasswordData) => {
     try {
-      await authService.requestPasswordReset(data);
+      await requestPasswordResetMutation.mutateAsync(data);
     } catch (error) {
       throw error;
     }
@@ -135,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const verifyPasswordReset = async (data: VerifyPasswordResetData) => {
     try {
-      await authService.verifyPasswordReset(data);
+      await verifyPasswordResetMutation.mutateAsync(data);
     } catch (error) {
       throw error;
     }
@@ -144,60 +100,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     try {
       console.log('Auth context: Starting logout');
-      await authService.logout();
-      console.log('Auth context: Logout API call successful');
-      
-      // Clear tokens from localStorage
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
-      console.log('Auth context: Tokens cleared from localStorage');
-      
+      await logoutMutation.mutateAsync();
+      console.log('Auth context: Logout successful');
       setUser(null);
-      authService.clearStoredUser();
-      console.log('Auth context: User state cleared');
     } catch (error) {
       console.error('Auth context: Logout error:', error);
       // Even if logout fails, clear local state
       setUser(null);
-      authService.clearStoredUser();
       throw error;
     }
   };
 
   const refreshToken = async () => {
     try {
-      const response = await authService.refreshAccessToken();
-      
-      // Save new tokens to localStorage
-      if (response.accessToken) {
-        localStorage.setItem('accessToken', response.accessToken);
-      }
-      if (response.refreshToken) {
-        localStorage.setItem('refreshToken', response.refreshToken);
-      }
-      console.log('Auth context: Refreshed tokens saved to localStorage');
-      
-      setUser(response.user);
-      authService.setStoredUser(response.user);
+      await refreshTokenMutation.mutateAsync();
     } catch (error) {
       // If refresh fails, user needs to sign in again
       setUser(null);
-      authService.clearStoredUser();
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('refreshToken');
       throw error;
     }
   };
 
   const getCurrentUser = async () => {
     try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-      authService.setStoredUser(currentUser);
-      return currentUser;
+      if (currentUser) {
+        return currentUser;
+      }
+      return null;
     } catch (error) {
       setUser(null);
-      authService.clearStoredUser();
       return null;
     }
   };

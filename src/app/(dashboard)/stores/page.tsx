@@ -28,7 +28,7 @@ export default function StoresPage() {
   const [selectedStore, setSelectedStore] = useState<Tstore | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  // Use React Query hooks
+  
   const filters = {
     search: searchQuery || undefined,
     status: statusFilter !== "all" ? [statusFilter as any] : undefined,
@@ -47,7 +47,6 @@ export default function StoresPage() {
     totalPages: storesData.totalPages
   } : null
 
-  // Mock stats for now
   const stats = null
   const statsLoading = false
 

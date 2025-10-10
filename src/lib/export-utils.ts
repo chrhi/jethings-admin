@@ -17,7 +17,7 @@ export function exportUsersToExcel(
     includeHeaders = true
   } = options
 
-  // Prepare the data for export
+
   const exportData = users.map(user => ({
     'First Name': user.firstName,
     'Last Name': user.lastName,
@@ -33,13 +33,11 @@ export function exportUsersToExcel(
     'User ID': user.id
   }))
 
-  // Create a new workbook
   const workbook = XLSX.utils.book_new()
 
-  // Convert data to worksheet
   const worksheet = XLSX.utils.json_to_sheet(exportData)
 
-  // Set column widths for better readability
+ 
   const columnWidths = [
     { wch: 15 }, // First Name
     { wch: 15 }, // Last Name
@@ -56,17 +54,17 @@ export function exportUsersToExcel(
   ]
   worksheet['!cols'] = columnWidths
 
-  // Add the worksheet to the workbook
+
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName)
 
-  // Generate the Excel file
+
   const excelBuffer = XLSX.write(workbook, { 
     bookType: 'xlsx', 
     type: 'array',
     compression: true
   })
 
-  // Create a blob and download
+
   const blob = new Blob([excelBuffer], { 
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
   })
@@ -76,7 +74,7 @@ export function exportUsersToExcel(
   link.href = url
   link.download = `${filename}-${new Date().toISOString().split('T')[0]}.xlsx`
   
-  // Trigger download
+
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
@@ -94,7 +92,7 @@ export function exportUsersToCSV(
     includeHeaders = true
   } = options
 
-  // Prepare the data for export
+
   const exportData = users.map(user => ({
     'First Name': user.firstName,
     'Last Name': user.lastName,
@@ -110,10 +108,10 @@ export function exportUsersToCSV(
     'User ID': user.id
   }))
 
-  // Convert to CSV
+
   const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(exportData))
 
-  // Create and download CSV file
+
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = window.URL.createObjectURL(blob)
   const link = document.createElement('a')

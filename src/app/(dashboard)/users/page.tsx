@@ -9,7 +9,7 @@ import { UserStatsComponent} from "@/features/users/components/user-stats"
 import { PaginationComponent } from "@/features/users/components/pagination"
 import { useUsersQuery, useUserStatsQuery } from "@/features/users/hooks"
 import { UserFilters } from "@/features/users/types"
-import { Plus, Download, RefreshCw, FileSpreadsheet } from "lucide-react"
+import {  Download, RefreshCw, FileSpreadsheet } from "lucide-react"
 import { exportUsersToExcel, exportUsersToCSV } from "@/lib/export-utils"
 import toast from "react-hot-toast"
 import {

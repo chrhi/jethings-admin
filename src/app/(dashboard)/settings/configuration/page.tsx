@@ -31,7 +31,7 @@ export default function ConfigurationPage() {
   const pathname = usePathname()
   const breadcrumbs = useBreadcrumbs(pathname)
 
-  // Use React Query hooks
+
   const { data: config, isLoading } = useAppConfigQuery()
   const mutation = useCreateOrUpdateAppConfigMutation()
 
@@ -46,7 +46,7 @@ export default function ConfigurationPage() {
     },
   })
 
-  // Update form when config data loads
+
   useEffect(() => {
     if (config) {
       form.reset({

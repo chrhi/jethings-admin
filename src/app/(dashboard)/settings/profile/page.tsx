@@ -21,7 +21,7 @@ import { format, isValid } from "date-fns"
 import { useCurrentUserQuery, useUpdateProfileMutation, useChangePasswordMutation, useDeleteAccountMutation } from "@/features/profile"
 import { UpdateProfileRequest, ChangePasswordRequest } from "@/features/profile/types"
 
-// Helper function to safely format dates
+
 const formatDate = (dateString: string | undefined | null): string => {
   if (!dateString) return 'N/A';
   
@@ -31,7 +31,7 @@ const formatDate = (dateString: string | undefined | null): string => {
   return format(date, "MMM dd, yyyy 'at' HH:mm");
 };
 
-// Form schemas
+
 const profileSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
@@ -53,13 +53,13 @@ export default function ProfilePage() {
   const breadcrumbs = useBreadcrumbs(pathname)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  // Use React Query hooks
+  
   const { data: user, isLoading } = useCurrentUserQuery()
   const updateProfileMutation = useUpdateProfileMutation()
   const changePasswordMutation = useChangePasswordMutation()
   const deleteAccountMutation = useDeleteAccountMutation()
 
-  // Profile form
+
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     mode: "onChange",
@@ -72,7 +72,7 @@ export default function ProfilePage() {
     },
   })
 
-  // Password form
+ 
   const passwordForm = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordSchema),
     mode: "onChange",
@@ -82,7 +82,7 @@ export default function ProfilePage() {
     },
   })
 
-  // Update forms when user data loads
+
   useEffect(() => {
     if (user) {
       profileForm.reset({
