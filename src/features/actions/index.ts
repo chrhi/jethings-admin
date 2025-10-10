@@ -1,3 +1,6 @@
 export * from './types'
 export * from './columns'
 export * from './components'
+export { createActionColumns } from './columns'
+export { ActionFiltersComponent } from './components/action-filters'
+export { ActionModal } from './components/action-modal'

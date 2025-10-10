@@ -12,8 +12,14 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal, Edit, Trash2, UserCheck, UserX, Loader2 } from "lucide-react"
-import { useUserActions } from "@/hooks/use-user-actions"
+import { 
+  useUpdateUserMutation, 
+  useDeactivateUserMutation, 
+  useActivateUserMutation, 
+  useDeleteUserMutation 
+} from "../hooks"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
+import toast from "react-hot-toast"
 
 interface UserActionsProps {
   user: User
@@ -21,35 +27,55 @@ interface UserActionsProps {
 }
 
 export function UserActions({ user, onUserUpdate }: UserActionsProps) {
-  const { state, editUser, toggleUserStatus, deleteUser, copyUserId } = useUserActions()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [statusDialogOpen, setStatusDialogOpen] = useState(false)
 
+  const updateUserMutation = useUpdateUserMutation()
+  const deactivateUserMutation = useDeactivateUserMutation()
+  const activateUserMutation = useActivateUserMutation()
+  const deleteUserMutation = useDeleteUserMutation()
+
+  const isLoading = updateUserMutation.isPending || 
+                   deactivateUserMutation.isPending || 
+                   activateUserMutation.isPending || 
+                   deleteUserMutation.isPending
+
   const handleToggleStatus = async () => {
-    await toggleUserStatus(user)
-    setStatusDialogOpen(false)
-    onUserUpdate?.()
+    try {
+      if (user.isActive) {
+        await deactivateUserMutation.mutateAsync(user.id)
+      } else {
+        await activateUserMutation.mutateAsync(user.id)
+      }
+      setStatusDialogOpen(false)
+      onUserUpdate?.()
+    } catch (error) {
+      // Error is handled by the mutation hook
+    }
   }
 
   const handleDelete = async () => {
-    await deleteUser(user)
-    setDeleteDialogOpen(false)
-    onUserUpdate?.()
+    try {
+      await deleteUserMutation.mutateAsync(user.id)
+      setDeleteDialogOpen(false)
+      onUserUpdate?.()
+    } catch (error) {
+      // Error is handled by the mutation hook
+    }
   }
 
-  const isActionLoading = state.loading && (
-    (state.actionType === 'delete' && user.id) ||
-    (state.actionType === 'activate' && user.id) ||
-    (state.actionType === 'deactivate' && user.id)
-  )
+  const copyUserId = (id: string) => {
+    navigator.clipboard.writeText(id)
+    toast.success('User ID copied to clipboard')
+  }
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0" disabled={state.loading}>
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isLoading}>
             <span className="sr-only">Open menu</span>
-            {isActionLoading ? (
+            {isLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <MoreHorizontal className="h-4 w-4" />
@@ -60,7 +86,7 @@ export function UserActions({ user, onUserUpdate }: UserActionsProps) {
          
           <DropdownMenuItem
             onClick={() => copyUserId(user.id)}
-            disabled={state.loading}
+            disabled={isLoading}
           >
             Copier l'ID utilisateur
           </DropdownMenuItem>
@@ -68,7 +94,7 @@ export function UserActions({ user, onUserUpdate }: UserActionsProps) {
          
           <DropdownMenuItem
             onClick={() => setStatusDialogOpen(true)}
-            disabled={state.loading}
+            disabled={isLoading}
             className={user.isActive ? "text-orange-600" : "text-green-600"}
           >
             {user.isActive ? (
@@ -80,7 +106,7 @@ export function UserActions({ user, onUserUpdate }: UserActionsProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => setDeleteDialogOpen(true)}
-            disabled={state.loading}
+            disabled={isLoading}
             className="text-red-600"
           >
             <Trash2 className="mr-2 h-4 w-4" />
@@ -97,7 +123,7 @@ export function UserActions({ user, onUserUpdate }: UserActionsProps) {
         description={`Êtes-vous sûr de vouloir ${user.isActive ? 'désactiver' : 'activer'} ${user.firstName} ${user.lastName} ?`}
         confirmText={user.isActive ? "Désactiver" : "Activer"}
         onConfirm={handleToggleStatus}
-        loading={state.loading && state.actionType === (user.isActive ? 'deactivate' : 'activate')}
+        loading={user.isActive ? deactivateUserMutation.isPending : activateUserMutation.isPending}
         variant={user.isActive ? 'destructive' : 'default'}
       />
 
@@ -109,7 +135,7 @@ export function UserActions({ user, onUserUpdate }: UserActionsProps) {
         description={`Êtes-vous sûr de vouloir supprimer ${user.firstName} ${user.lastName} ? Cette action ne peut pas être annulée.`}
         confirmText="Supprimer"
         onConfirm={handleDelete}
-        loading={state.loading && state.actionType === 'delete'}
+        loading={deleteUserMutation.isPending}
         variant="destructive"
       />
 

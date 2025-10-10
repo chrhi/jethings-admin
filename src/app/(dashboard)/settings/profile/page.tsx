@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,13 +14,14 @@ import { Badge } from "@/components/ui/badge"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Breadcrumb, useBreadcrumbs } from "@/components/ui/breadcrumb"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Save, User, Trash2, Shield } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
 import { usePathname } from "next/navigation"
-import toast from "react-hot-toast"
 import { format, isValid } from "date-fns"
+import { useCurrentUserQuery, useUpdateProfileMutation, useChangePasswordMutation, useDeleteAccountMutation } from "@/features/profile"
+import { UpdateProfileRequest, ChangePasswordRequest } from "@/features/profile/types"
 
-// Helper function to safely format dates
+
 const formatDate = (dateString: string | undefined | null): string => {
   if (!dateString) return 'N/A';
   
@@ -27,47 +31,83 @@ const formatDate = (dateString: string | undefined | null): string => {
   return format(date, "MMM dd, yyyy 'at' HH:mm");
 };
 
+
+const profileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  phoneNumber: z.string().optional(),
+  age: z.number().optional(),
+  description: z.string().optional(),
+})
+
+const passwordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: z.string().min(8, "Password must be at least 8 characters"),
+})
+
+type ProfileFormValues = z.infer<typeof profileSchema>
+type PasswordFormValues = z.infer<typeof passwordSchema>
+
 export default function ProfilePage() {
-  const { user } = useAuth()
   const pathname = usePathname()
   const breadcrumbs = useBreadcrumbs(pathname)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
 
-  const handleSaveProfile = async () => {
-    setLoading(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      toast.success('Profile updated successfully')
-    } catch (error) {
-      toast.error('Failed to update profile')
-    } finally {
-      setLoading(false)
-    }
-  }
+  
+  const { data: user, isLoading } = useCurrentUserQuery()
+  const updateProfileMutation = useUpdateProfileMutation()
+  const changePasswordMutation = useChangePasswordMutation()
+  const deleteAccountMutation = useDeleteAccountMutation()
 
-  const handleDeleteAccount = async () => {
-    setLoading(true)
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      toast.success('Account deletion initiated')
-      setDeleteDialogOpen(false)
-      // In a real app, this would redirect to a confirmation page or logout
-    } catch (error) {
-      toast.error('Failed to delete account')
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  // Simulate loading effect
+  const profileForm = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    mode: "onChange",
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      phoneNumber: "",
+      age: undefined,
+      description: "",
+    },
+  })
+
+ 
+  const passwordForm = useForm<PasswordFormValues>({
+    resolver: zodResolver(passwordSchema),
+    mode: "onChange",
+    defaultValues: {
+      currentPassword: "",
+      newPassword: "",
+    },
+  })
+
+
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1000)
-    return () => clearTimeout(timer)
-  }, [])
+    if (user) {
+      profileForm.reset({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phoneNumber: user.phoneNumber || "",
+        age: user.age,
+        description: user.description || "",
+      })
+    }
+  }, [user, profileForm])
+
+  const handleSaveProfile = (data: ProfileFormValues) => {
+    updateProfileMutation.mutate(data as UpdateProfileRequest)
+  }
+
+  const handleChangePassword = (data: PasswordFormValues) => {
+    changePasswordMutation.mutate(data as ChangePasswordRequest)
+    passwordForm.reset()
+  }
+
+  const handleDeleteAccount = () => {
+    deleteAccountMutation.mutate()
+    setDeleteDialogOpen(false)
+  }
 
   if (isLoading || !user) {
     return (
@@ -233,8 +273,8 @@ export default function ProfilePage() {
                 </h3>
                 <p className="text-muted-foreground">{user.email}</p>
                 <div className="flex space-x-2">
-                  <Badge variant={(user as any).isActive ? "success" : "destructive"}>
-                    {(user as any).isActive ? "Active" : "Inactive"}
+                  <Badge variant={user.isActive ? "success" : "destructive"}>
+                    {user.isActive ? "Active" : "Inactive"}
                   </Badge>
                   <Badge variant={user.isEmailVerified ? "success" : "warning"}>
                     {user.isEmailVerified ? "Verified" : "Unverified"}
@@ -265,47 +305,99 @@ export default function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" defaultValue={user.firstName} placeholder="Your first name" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" defaultValue={user.lastName} placeholder="Your last name" />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue={user.email} placeholder="your@email.com" />
-            </div>
+            <Form {...profileForm}>
+              <form onSubmit={profileForm.handleSubmit(handleSaveProfile)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={profileForm.control}
+                    name="firstName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>First Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your first name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={profileForm.control}
+                    name="lastName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Last Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your last name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                
+                <FormField
+                  control={profileForm.control}
+                  name="phoneNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your phone number" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input id="phoneNumber" defaultValue={user.phoneNumber} placeholder="Your phone number" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
-                <Input id="age" type="number" defaultValue={user.age} placeholder="Your age" />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={profileForm.control}
+                    name="age"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Age</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="Your age" 
+                            {...field}
+                            onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea 
-                id="description" 
-                defaultValue={user.description}
-                placeholder="Tell us about yourself..." 
-                rows={3}
-              />
-            </div>
+                <FormField
+                  control={profileForm.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Tell us about yourself..." 
+                          rows={3}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <Button onClick={handleSaveProfile} disabled={loading}>
-              <Save className="mr-2 h-4 w-4" />
-              {loading ? 'Saving...' : 'Save Changes'}
-            </Button>
+                <Button 
+                  type="submit" 
+                  disabled={updateProfileMutation.isPending || !profileForm.formState.isValid}
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
 
@@ -370,7 +462,6 @@ export default function ProfilePage() {
           </Card>
         </div>
 
-
         {/* Security & Password */}
         <Card className="rounded-sm">
           <CardHeader>
@@ -383,16 +474,46 @@ export default function ProfilePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Change Password</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input type="password" placeholder="Current password" />
-                <Input type="password" placeholder="New password" />
-              </div>
-            </div>
-            <Button variant="outline">
-              Update Password
-            </Button>
+            <Form {...passwordForm}>
+              <form onSubmit={passwordForm.handleSubmit(handleChangePassword)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Change Password</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={passwordForm.control}
+                      name="currentPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input type="password" placeholder="Current password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={passwordForm.control}
+                      name="newPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input type="password" placeholder="New password" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
+                <Button 
+                  type="submit" 
+                  variant="outline"
+                  disabled={changePasswordMutation.isPending || !passwordForm.formState.isValid}
+                >
+                  {changePasswordMutation.isPending ? 'Updating...' : 'Update Password'}
+                </Button>
+              </form>
+            </Form>
           </CardContent>
         </Card>
 
@@ -418,9 +539,10 @@ export default function ProfilePage() {
               <Button 
                 variant="destructive" 
                 onClick={() => setDeleteDialogOpen(true)}
+                disabled={deleteAccountMutation.isPending}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete Account
+                {deleteAccountMutation.isPending ? 'Deleting...' : 'Delete Account'}
               </Button>
             </div>
           </CardContent>
@@ -436,7 +558,7 @@ export default function ProfilePage() {
         onConfirm={handleDeleteAccount}
         confirmText="Delete Account"
         cancelText="Cancel"
-        loading={loading}
+        loading={deleteAccountMutation.isPending}
         variant="destructive"
       />
     </div>

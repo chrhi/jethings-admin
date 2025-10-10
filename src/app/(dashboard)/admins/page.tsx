@@ -6,13 +6,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { RoleTable, RoleStats, CreateRoleModal } from "@/features/roles"
-import { useRoles } from "@/hooks/use-roles"
-import { RoleFilters, CreateRoleData } from "@/features/roles/types"
+import { DataTable } from "@/features/users/table"
+import { createColumns } from "@/features/users/columns"
+import { UserStatsComponent } from "@/features/users/components/user-stats"
+import { PaginationComponent } from "@/features/users/components/pagination"
+import { 
+  useAdminsQuery, 
+  useCreateAdminMutation, 
+  useDeleteAdminMutation, 
+  useBlockAdminMutation, 
+  useUnblockAdminMutation 
+} from "@/features/users/hooks"
+import { UserFilters, CreateAdminData, User } from "@/features/users/types"
 import { Plus, RefreshCw, Search, Filter } from "lucide-react"
 
-export default function RoleManagementPage() {
-  const [filters, setFilters] = useState<RoleFilters>({
+export default function AdminManagementPage() {
+  const [filters, setFilters] = useState<UserFilters>({
     page: 1,
     limit: 10,
     sortBy: 'createdAt',
@@ -22,7 +31,13 @@ export default function RoleManagementPage() {
   })
   const [createModalOpen, setCreateModalOpen] = useState(false)
 
-  const { roles, loading, error, pagination, createRole, refetch } = useRoles(filters)
+  const { data: adminsData, isLoading: loading, error, refetch } = useAdminsQuery()
+  const createAdminMutation = useCreateAdminMutation()
+  const deleteAdminMutation = useDeleteAdminMutation()
+  const blockAdminMutation = useBlockAdminMutation()
+  const unblockAdminMutation = useUnblockAdminMutation()
+
+  const admins = adminsData || []
 
   const handlePageChange = (page: number) => {
     setFilters(prev => ({ ...prev, page }))
@@ -40,13 +55,13 @@ export default function RoleManagementPage() {
     refetch()
   }
 
-  const handleCreateRole = async (data: CreateRoleData) => {
+  const handleCreateAdmin = async (data: CreateAdminData) => {
     try {
-      await createRole(data)
+      await createAdminMutation.mutateAsync(data)
       setCreateModalOpen(false)
-      refetch() // Refresh the roles list
+      refetch() // Refresh the admins list
     } catch (error) {
-      console.error('Failed to create role:', error)
+      console.error('Failed to create admin:', error)
     }
   }
 
@@ -55,33 +70,47 @@ export default function RoleManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestion des rôles</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Admin Management</h1>
           <p className="text-muted-foreground">
-            Créer et gérer les rôles utilisateur avec des permissions spécifiques
+            Manage and monitor admin accounts
           </p>
         </div>
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
-            Actualiser
+            Refresh
           </Button>
           <Button onClick={() => setCreateModalOpen(true)}>
             <Plus className="h-4 w-4 mr-2" />
-            Créer un rôle
+            Create Admin
           </Button>
         </div>
       </div>
 
-      {/* Create Role Modal */}
-      <CreateRoleModal
-        open={createModalOpen}
-        onOpenChange={setCreateModalOpen}
-        onSubmit={handleCreateRole}
-        loading={loading}
-      />
+      {/* Create Admin Modal - TODO: Implement admin creation modal */}
+      {createModalOpen && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Create New Admin</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Admin creation modal will be implemented here.
+            </p>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button variant="outline" onClick={() => setCreateModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => setCreateModalOpen(false)}>
+                Create Admin
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Role Stats */}
-      <RoleStats roles={roles} />
+      {/* Admin Stats */}
+      <UserStatsComponent stats={null} loading={false} />
 
       {/* Filters */}
       <Card>
@@ -94,12 +123,12 @@ export default function RoleManagementPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="search">Search Roles</Label>
+              <Label htmlFor="search">Search Admins</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="search"
-                  placeholder="Search by name or description..."
+                  placeholder="Search by name or email..."
                   value={filters.search || ''}
                   onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10"
@@ -137,9 +166,9 @@ export default function RoleManagementPage() {
               <Label>Sort By</Label>
               <div className="flex space-x-2">
                 <Button
-                  variant={filters.sortBy === 'name' ? 'default' : 'outline'}
+                  variant={filters.sortBy === 'firstName' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'name', page: 1 }))}
+                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'firstName', page: 1 }))}
                 >
                   Name
                 </Button>
@@ -151,11 +180,11 @@ export default function RoleManagementPage() {
                   Created
                 </Button>
                 <Button
-                  variant={filters.sortBy === 'userCount' ? 'default' : 'outline'}
+                  variant={filters.sortBy === 'lastActivity' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'userCount', page: 1 }))}
+                  onClick={() => setFilters(prev => ({ ...prev, sortBy: 'lastActivity', page: 1 }))}
                 >
-                  Users
+                  Activity
                 </Button>
               </div>
             </div>
@@ -168,7 +197,7 @@ export default function RoleManagementPage() {
         <Card className="border-destructive">
           <CardContent className="pt-6">
             <div className="text-center">
-              <p className="text-destructive mb-4">{error}</p>
+              <p className="text-destructive mb-4">{String(error?.message || 'An error occurred')}</p>
               <Button variant="outline" onClick={handleRefresh}>
                 Try Again
               </Button>
@@ -177,48 +206,25 @@ export default function RoleManagementPage() {
         </Card>
       )}
 
-      {/* Roles Table */}
+      {/* Admins Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Roles</CardTitle>
+          <CardTitle>Admins</CardTitle>
         </CardHeader>
         <CardContent>
-          <RoleTable 
-            data={roles} 
+          <DataTable 
+            columns={createColumns(refetch)} 
+            data={admins} 
             loading={loading}
           />
           
-          {/* Pagination */}
+          {/* Admin Count */}
           <div className="mt-4">
             <div className="flex items-center justify-between px-2">
               <div className="flex items-center space-x-2">
                 <p className="text-sm text-muted-foreground">
-                  Showing {pagination ? ((pagination.page - 1) * pagination.limit + 1) : 0} to{' '}
-                  {pagination ? Math.min(pagination.page * pagination.limit, pagination.total) : 0} of{' '}
-                  {pagination?.total || 0} results
+                  Showing {admins.length} admin{admins.length !== 1 ? 's' : ''}
                 </p>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange((pagination?.page || 1) - 1)}
-                  disabled={!pagination?.hasPrev || loading}
-                >
-                  Previous
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  Page {pagination?.page || 1} of {pagination?.totalPages || 1}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handlePageChange((pagination?.page || 1) + 1)}
-                  disabled={!pagination?.hasNext || loading}
-                >
-                  Next
-                </Button>
               </div>
             </div>
           </div>

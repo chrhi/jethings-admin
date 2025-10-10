@@ -1,7 +1,8 @@
-export { RoleTable } from "./table"
-export { columns } from "./columns"
-export { CreateRoleForm } from "./components/create-role-form"
-export { CreateRoleModal } from "./components/create-role-modal"
-export { RoleStats } from "./components/role-stats"
-export type { Role, CreateRoleData, UpdateRoleData, RoleFilters, Permission } from "./types"
-export { PERMISSIONS } from "./types"
+export * from './types'
+export * from './columns'
+export * from './components'
+export { createRoleColumns } from './columns'
+export { RoleFiltersComponent } from './components/role-filters'
+export { RoleModal } from './components/role-modal'
+export { RoleSheet } from './components/role-sheet'
+export { RolePolicyAssignment } from './components/role-policy-assignment'

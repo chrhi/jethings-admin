@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ProductTypeStats } from "../types"
 
 interface ProductTypeStatsProps {
-  stats: ProductTypeStats
+  stats?: ProductTypeStats
   loading?: boolean
 }
 
 export function ProductTypeStatsComponent({ stats, loading }: ProductTypeStatsProps) {
-  if (loading) {
+  if (loading || !stats) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, i) => (

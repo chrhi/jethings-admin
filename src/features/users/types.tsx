@@ -7,7 +7,7 @@ export interface User {
   phoneNumber?: string;
   avatarUrl?: string;
   description?: string;
-  roles: string[];
+  roles?: string[];
   isEmailVerified: boolean;
   isActive: boolean;
   lastActivity?: string;

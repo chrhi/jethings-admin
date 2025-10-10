@@ -1,43 +1,13 @@
-"use client"
+// This file is deprecated. Use the new React Query hooks from @/features/dashboard/hooks instead.
+// 
+// The new implementation:
+// - Uses React Query for better caching and state management
+// - Calls backend API directly via apiClient
+// - Provides better error handling and loading states
+// 
+// Migration:
+// - Replace useDashboardStats with useDashboardStatsQuery
 
-import { useState, useEffect } from 'react'
-import { DashboardKpiStats } from '@/features/dashboard/components/kpi-cards'
-
-export function useDashboardStats() {
-  const [stats, setStats] = useState<DashboardKpiStats>({
-    totalUsers: 0,
-    totalStores: 0,
-    totalProducts: 0,
-    processedMoney: 0,
-  })
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true)
-      
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800))
-        
-        // Mock dashboard statistics
-        const dashboardStats: DashboardKpiStats = {
-          totalUsers: 1295,
-          totalStores: 48,
-          totalProducts: 2920,
-          processedMoney: 17500,
-        }
-        
-        setStats(dashboardStats)
-      } catch (error) {
-        console.error('Error fetching dashboard stats:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [])
-
-  return { stats, loading }
-}
+export { 
+  useDashboardStatsQuery as useDashboardStats
+} from '@/features/dashboard/hooks'

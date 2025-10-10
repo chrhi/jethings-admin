@@ -4,11 +4,11 @@ import {
   KPICards,
   UserActivityChart, 
 } from "@/features/dashboard"
-import { useDashboardStats } from "@/hooks/use-dashboard-stats"
+import { useDashboardStatsQuery } from "@/features/dashboard/hooks"
 import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Home() {
-  const { stats, loading } = useDashboardStats()
+ const { data: stats, isLoading: loading } = useDashboardStatsQuery()
 
   return (
     <div className="space-y-6">
@@ -44,7 +44,7 @@ export default function Home() {
           ))}
         </div>
       ) : (
-        <KPICards stats={stats} />
+        <KPICards stats={stats!} />
       )}
       
       {/* User Activity Chart */}

@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Badge } from "@/components/ui/badge"
 import { Plus, Zap, Shield, Edit, Trash2, MoreHorizontal } from "lucide-react"
 import toast from "react-hot-toast"
-import { useActions } from "@/hooks/use-actions"
+import { useActionsQuery, useCreateActionMutation, useUpdateActionMutation, useDeleteActionMutation } from "@/features/actions/hooks"
 import { ActionForm } from "@/features/actions/components/action-form"
 import { Action, CreateActionRequest, UpdateActionRequest } from "@/features/actions/types"
 import { Resource } from "@/features/resources/types"
 import { format } from "date-fns"
+import { useConfirmationContext } from "@/contexts/confirmation-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,75 +36,55 @@ export function ResourceActionsSheet({
 }: ResourceActionsSheetProps) {
   const [modalOpen, setModalOpen] = useState(false)
   const [editingAction, setEditingAction] = useState<Action | undefined>()
-  const [actionLoading, setActionLoading] = useState(false)
 
-  const { 
-    actions, 
-    loading, 
-    error, 
-    pagination, 
-    fetchActions, 
-    createAction, 
-    updateAction, 
-    deleteAction 
-  } = useActions()
+  const { openConfirmation } = useConfirmationContext()
+  
+  // React Query hooks
+  const { data: actionsData, isLoading, error } = useActionsQuery({ page: 1, limit: 10 })
+  const createActionMutation = useCreateActionMutation()
+  const updateActionMutation = useUpdateActionMutation()
+  const deleteActionMutation = useDeleteActionMutation()
 
-  // Fetch actions when sheet opens
-  useEffect(() => {
-    if (open && resource) {
-      fetchActions({ page: 1, limit: 10 })
-    }
-  }, [open, resource, fetchActions])
+  const actions = actionsData?.data || []
 
   const handleCreateAction = async (data: CreateActionRequest) => {
-    setActionLoading(true)
     try {
-      const result = await createAction(data)
-      if (result) {
-        toast.success("Action created successfully")
-        setModalOpen(false)
-        fetchActions({ page: 1, limit: 10 }) // Refresh the list
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create action")
-    } finally {
-      setActionLoading(false)
+      await createActionMutation.mutateAsync(data)
+      setModalOpen(false)
+    } catch (error) {
+      // Error handling is done in the mutation
     }
   }
 
   const handleUpdateAction = async (data: UpdateActionRequest) => {
     if (!editingAction) return
 
-    setActionLoading(true)
     try {
-      const result = await updateAction(editingAction.id, data)
-      if (result) {
-        toast.success("Action updated successfully")
-        setModalOpen(false)
-        setEditingAction(undefined)
-        fetchActions({ page: 1, limit: 10 }) 
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update action")
-    } finally {
-      setActionLoading(false)
+      await updateActionMutation.mutateAsync({ id: editingAction.id, data })
+      setModalOpen(false)
+      setEditingAction(undefined)
+    } catch (error) {
+      // Error handling is done in the mutation
     }
   }
 
   const handleDeleteAction = async (action: Action) => {
-    if (!confirm(`Are you sure you want to delete the action "${action.name}"?`)) {
-      return
-    }
-
-    try {
-      const success = await deleteAction(action.id)
-      if (success) {
-        toast.success("Action deleted successfully")
-        fetchActions({ page: 1, limit: 10 }) // Refresh the list
+    openConfirmation(
+      {
+        title: "Delete Action",
+        description: `Are you sure you want to delete the action "${action.name}"? This action cannot be undone.`,
+        variant: "destructive",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+      },
+      async () => {
+        try {
+          await deleteActionMutation.mutateAsync(action.id)
+        } catch (error) {
+          // Error handling is done in the mutation
+        }
       }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to delete action")
-    }
+    )
   }
 
   const handleEditAction = (action: Action) => {
@@ -160,10 +141,10 @@ export function ResourceActionsSheet({
               <Card className="border-destructive">
                 <CardHeader>
                   <CardTitle className="text-destructive">Error</CardTitle>
-                  <CardDescription>{error}</CardDescription>
+                  <CardDescription>{error?.message || 'An error occurred'}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Button onClick={() => fetchActions({ page: 1, limit: 10 })}>
+                  <Button onClick={() => window.location.reload()}>
                     Try Again
                   </Button>
                 </CardContent>
@@ -176,11 +157,11 @@ export function ResourceActionsSheet({
                  <CardHeader>
                    <CardTitle>Actions</CardTitle>
                    <CardDescription>
-                     {pagination.total} action{pagination.total !== 1 ? 's' : ''} found
+                     {actionsData?.total || 0} action{(actionsData?.total || 0) !== 1 ? 's' : ''} found
                    </CardDescription>
                  </CardHeader>
                  <CardContent>
-                   {loading ? (
+                   {isLoading ? (
                      <div className="space-y-3">
                        {[...Array(3)].map((_, i) => (
                          <div key={i} className="flex items-center space-x-3 p-3 border rounded-lg animate-pulse">
@@ -259,10 +240,10 @@ export function ResourceActionsSheet({
                    )}
                    
                    {/* Simple pagination indicator */}
-                   {!loading && actions.length > 0 && (
+                   {!isLoading && actions.length > 0 && (
                      <div className="flex items-center justify-center pt-4">
                        <p className="text-sm text-muted-foreground">
-                         Showing {actions.length} of {pagination.total} actions
+                         Showing {actions.length} of {actionsData?.total || 0} actions
                        </p>
                      </div>
                    )}
@@ -291,7 +272,7 @@ export function ResourceActionsSheet({
             action={editingAction}
             onSubmit={editingAction ? handleUpdateAction : handleCreateAction}
             onCancel={handleModalClose}
-            loading={actionLoading}
+            loading={createActionMutation.isPending || updateActionMutation.isPending}
           />
         </DialogContent>
       </Dialog>

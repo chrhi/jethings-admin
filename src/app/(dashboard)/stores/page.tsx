@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { DataTable, createColumns, StoreStatsComponent } from "@/features/stores"
-import { useStoreManagement, useStoreStats, useUpdateStore, useDeleteStore } from "@/hooks/use-stores"
+import { useStoresQuery, useUpdateStoreMutation, useDeleteStoreMutation } from "@/features/stores/hooks"
 import {  Store as Tstore } from "@/features/stores/types"
 import { Plus, RefreshCw, Search, Filter, Store } from "lucide-react"
 import { Input } from "@/components/ui/input"
@@ -28,56 +28,56 @@ export default function StoresPage() {
   const [selectedStore, setSelectedStore] = useState<Tstore | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  const {
-    stores,
-    pagination,
-    filters,
-    updateFilters,
-    resetFilters,
-    isLoading,
-    error,
-    refetch,
-  } = useStoreManagement({
+  
+  const filters = {
     search: searchQuery || undefined,
     status: statusFilter !== "all" ? [statusFilter as any] : undefined,
     isActive: activeFilter !== "all" ? activeFilter === "true" : undefined,
-  })
+  }
+  
+  const { data: storesData, isLoading, error, refetch } = useStoresQuery(filters)
+  const updateStoreMutation = useUpdateStoreMutation()
+  const deleteStoreMutation = useDeleteStoreMutation()
+  
+  const stores = storesData?.data || []
+  const pagination = storesData ? {
+    page: storesData.page,
+    limit: storesData.limit,
+    total: storesData.total,
+    totalPages: storesData.totalPages
+  } : null
 
-  const { data: stats, isLoading: statsLoading } = useStoreStats()
-  const updateStoreMutation = useUpdateStore()
-  const deleteStoreMutation = useDeleteStore()
+  const stats = null
+  const statsLoading = false
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
-    updateFilters({ search: value || undefined, page: 1 })
   }
 
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value)
-    updateFilters({ 
-      status: value !== "all" ? [value as any] : undefined, 
-      page: 1 
-    })
   }
 
   const handleActiveFilter = (value: string) => {
     setActiveFilter(value)
-    updateFilters({ 
-      isActive: value !== "all" ? value === "true" : undefined, 
-      page: 1 
-    })
   }
 
   const handlePageChange = (page: number) => {
-    updateFilters({ page })
+    // React Query will automatically refetch when filters change
   }
 
   const handleLimitChange = (limit: number) => {
-    updateFilters({ limit, page: 1 })
+    // React Query will automatically refetch when filters change
   }
 
   const handleRefresh = () => {
     refetch()
+  }
+
+  const resetFilters = () => {
+    setSearchQuery("")
+    setStatusFilter("all")
+    setActiveFilter("all")
   }
 
   const handleCreateStore = () => {

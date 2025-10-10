@@ -1,7 +1,15 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { authService, User, SignInData, ForgotPasswordData, VerifyPasswordResetData } from '@/lib/auth-service';
+import { User, SignInData, ForgotPasswordData, VerifyPasswordResetData } from '@/features/auth/types';
+import { 
+  useCurrentUser, 
+  useSignInMutation, 
+  useLogoutMutation, 
+  useRefreshTokenMutation,
+  useRequestPasswordResetMutation,
+  useVerifyPasswordResetMutation
+} from '@/features/auth/hooks';
 
 interface AuthContextType {
   user: User | null;
@@ -27,58 +35,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // React Query hooks
+  const { data: currentUser, isLoading: userLoading, error: userError } = useCurrentUser();
+  const signInMutation = useSignInMutation();
+  const logoutMutation = useLogoutMutation();
+  const refreshTokenMutation = useRefreshTokenMutation();
+  const requestPasswordResetMutation = useRequestPasswordResetMutation();
+  const verifyPasswordResetMutation = useVerifyPasswordResetMutation();
+
+  // Update user state when currentUser query changes
   useEffect(() => {
-    // Check if user is already authenticated on mount
-    const initializeAuth = async () => {
+    if (currentUser) {
+      setUser(currentUser);
+      setIsLoading(false);
+    } else if (userError) {
+      setUser(null);
+      setIsLoading(false);
+    } else if (!userLoading) {
+      setIsLoading(false);
+    }
+  }, [currentUser, userError, userLoading]);
+
+  // Check for stored user data on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user_data');
+    if (storedUser && !currentUser) {
       try {
-        // First check if user is authenticated
-        const isAuth = await authService.isAuthenticated();
-        console.log('Authentication check result:', isAuth);
-        
-        if (!isAuth) {
-          console.log('User not authenticated');
-          setUser(null);
-          authService.clearStoredUser();
-          setIsLoading(false);
-          return;
-        }
-
-        // Check for stored user data first
-        const storedUser = authService.getStoredUser();
-        if (storedUser) {
-          console.log('Found stored user:', storedUser);
-          setUser(storedUser);
-          setIsLoading(false);
-          return;
-        }
-
-        // Try to get current user data from server
-        console.log('No stored user, fetching from server...');
-        const currentUser = await authService.getCurrentUser();
-        console.log('Got current user from server:', currentUser);
-        setUser(currentUser);
-        authService.setStoredUser(currentUser);
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
       } catch (error) {
-        console.log('Failed to initialize auth:', error);
-        // If getting current user fails, clear stored data
-        authService.clearStoredUser();
-        setUser(null);
-      } finally {
-        setIsLoading(false);
+        localStorage.removeItem('user_data');
       }
-    };
-
-    initializeAuth();
-  }, []);
+    }
+    setIsLoading(false);
+  }, [currentUser]);
 
   const signIn = async (data: SignInData) => {
     try {
       console.log('Auth context: Starting sign in');
-      const response = await authService.signIn(data);
-      console.log('Auth context: Sign in successful, setting user:', response.user);
-      setUser(response.user);
-      authService.setStoredUser(response.user);
-      console.log('Auth context: User set successfully');
+      await signInMutation.mutateAsync(data);
+      console.log('Auth context: Sign in successful');
     } catch (error) {
       console.error('Auth context: Sign in error:', error);
       throw error;
@@ -87,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const requestPasswordReset = async (data: ForgotPasswordData) => {
     try {
-      await authService.requestPasswordReset(data);
+      await requestPasswordResetMutation.mutateAsync(data);
     } catch (error) {
       throw error;
     }
@@ -95,7 +91,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const verifyPasswordReset = async (data: VerifyPasswordResetData) => {
     try {
-      await authService.verifyPasswordReset(data);
+      await verifyPasswordResetMutation.mutateAsync(data);
     } catch (error) {
       throw error;
     }
@@ -104,42 +100,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const logout = async () => {
     try {
       console.log('Auth context: Starting logout');
-      await authService.logout();
-      console.log('Auth context: Logout API call successful');
+      await logoutMutation.mutateAsync();
+      console.log('Auth context: Logout successful');
       setUser(null);
-      authService.clearStoredUser();
-      console.log('Auth context: User state cleared');
     } catch (error) {
       console.error('Auth context: Logout error:', error);
       // Even if logout fails, clear local state
       setUser(null);
-      authService.clearStoredUser();
       throw error;
     }
   };
 
   const refreshToken = async () => {
     try {
-      const response = await authService.refreshAccessToken();
-      setUser(response.user);
-      authService.setStoredUser(response.user);
+      await refreshTokenMutation.mutateAsync();
     } catch (error) {
       // If refresh fails, user needs to sign in again
       setUser(null);
-      authService.clearStoredUser();
       throw error;
     }
   };
 
   const getCurrentUser = async () => {
     try {
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
-      authService.setStoredUser(currentUser);
-      return currentUser;
+      if (currentUser) {
+        return currentUser;
+      }
+      return null;
     } catch (error) {
       setUser(null);
-      authService.clearStoredUser();
       return null;
     }
   };

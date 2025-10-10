@@ -17,25 +17,6 @@ export const createColumns = (onUserUpdate?: () => void): ColumnDef<User>[] => [
     },
   },
   {
-    accessorKey: "roles",
-    header: "Role",
-    cell: ({ row }) => {
-      const roles = row.getValue("roles") as string[]
-      return (
-        <div className="flex space-x-1">
-          {roles.map((role) => (
-            <Badge 
-              key={role} 
-              variant={role === 'super_admin' ? 'purple' : role === 'admin' ? 'indigo' : 'secondary'}
-            >
-              {role.replace('_', ' ')}
-            </Badge>
-          ))}
-        </div>
-      )
-    },
-  },
-  {
     accessorKey: "phoneNumber",
     header: "Phone",
     cell: ({ row }) => {
