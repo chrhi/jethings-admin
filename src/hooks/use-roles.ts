@@ -1,204 +1,83 @@
-"use client"
+import { useState, useCallback } from 'react'
+import { Role, CreateRoleRequest, UpdateRoleRequest, RoleFilters, RoleResponse } from '@/features/roles/types'
+import { roleService } from '@/lib/role-service'
 
-import { useState, useEffect } from "react"
-import { Role, RoleFilters, CreateRoleData } from "@/features/roles/types"
-
-// Mock data for demonstration
-const mockRoles: Role[] = [
-  {
-    id: "1",
-    name: "Super Admin",
-    description: "Full system access with all permissions",
-    permissions: ["users.read", "users.create", "users.update", "users.delete", "roles.read", "roles.create", "roles.update", "roles.delete", "dashboard.read", "settings.read", "settings.update", "reports.read"],
-    isActive: true,
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-    userCount: 2,
-  },
-  {
-    id: "2",
-    name: "Admin",
-    description: "Administrative access with most permissions",
-    permissions: ["users.read", "users.create", "users.update", "roles.read", "dashboard.read", "settings.read", "reports.read"],
-    isActive: true,
-    createdAt: "2024-01-02T00:00:00Z",
-    updatedAt: "2024-01-02T00:00:00Z",
-    userCount: 5,
-  },
-  {
-    id: "3",
-    name: "Content Manager",
-    description: "Can manage content and view users",
-    permissions: ["users.read", "dashboard.read", "reports.read"],
-    isActive: true,
-    createdAt: "2024-01-03T00:00:00Z",
-    updatedAt: "2024-01-03T00:00:00Z",
-    userCount: 8,
-  },
-  {
-    id: "4",
-    name: "Viewer",
-    description: "Read-only access to dashboard and reports",
-    permissions: ["dashboard.read", "reports.read"],
-    isActive: true,
-    createdAt: "2024-01-04T00:00:00Z",
-    updatedAt: "2024-01-04T00:00:00Z",
-    userCount: 12,
-  },
-  {
-    id: "5",
-    name: "Guest",
-    description: "Limited access role for temporary users",
-    permissions: ["dashboard.read"],
-    isActive: false,
-    createdAt: "2024-01-05T00:00:00Z",
-    updatedAt: "2024-01-05T00:00:00Z",
-    userCount: 0,
-  },
-]
-
-export function useRoles(filters: RoleFilters) {
+export function useRoles() {
   const [roles, setRoles] = useState<Role[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0,
+  })
 
-  const fetchRoles = async () => {
+  const fetchRoles = useCallback(async (filters: RoleFilters = {}) => {
+    setLoading(true)
+    setError(null)
+    
     try {
-      setLoading(true)
-      setError(null)
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      let filteredRoles = [...mockRoles]
-      
-      // Apply search filter
-      if (filters.search) {
-        filteredRoles = filteredRoles.filter(role =>
-          role.name.toLowerCase().includes(filters.search!.toLowerCase()) ||
-          role.description.toLowerCase().includes(filters.search!.toLowerCase())
-        )
-      }
-      
-      // Apply active filter
-      if (filters.isActive !== undefined) {
-        filteredRoles = filteredRoles.filter(role => role.isActive === filters.isActive)
-      }
-      
-      // Apply sorting
-      filteredRoles.sort((a, b) => {
-        const aValue = a[filters.sortBy]
-        const bValue = b[filters.sortBy]
-        
-        if (filters.sortOrder === 'asc') {
-          return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
-        } else {
-          return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
-        }
+      const data: RoleResponse = await roleService.getRoles(filters)
+      setRoles(data.data)
+      setPagination({
+        total: data.total,
+        page: data.page,
+        limit: data.limit,
+        totalPages: data.totalPages,
       })
-      
-      // Apply pagination
-      const startIndex = (filters.page - 1) * filters.limit
-      const endIndex = startIndex + filters.limit
-      const paginatedRoles = filteredRoles.slice(startIndex, endIndex)
-      
-      setRoles(paginatedRoles)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch roles')
+      console.error('Error fetching roles:', err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(() => {
-    fetchRoles()
-  }, [filters])
-
-  const createRole = async (roleData: CreateRoleData) => {
+  const createRole = useCallback(async (data: CreateRoleRequest): Promise<Role | null> => {
     try {
-      setLoading(true)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      const newRole: Role = {
-        ...roleData,
-        isActive: roleData.isActive ?? true, // Default to active if not specified
-        id: Date.now().toString(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        userCount: 0,
-      }
-      
+      const newRole = await roleService.createRole(data)
       setRoles(prev => [newRole, ...prev])
+      return newRole
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create role')
-    } finally {
-      setLoading(false)
+      console.error('Error creating role:', err)
+      throw err
     }
-  }
+  }, [])
 
-  const updateRole = async (roleId: string, updates: Partial<Role>) => {
+  const updateRole = useCallback(async (id: string, data: UpdateRoleRequest): Promise<Role | null> => {
     try {
-      setLoading(true)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setRoles(prev => prev.map(role => 
-        role.id === roleId 
-          ? { ...role, ...updates, updatedAt: new Date().toISOString() }
-          : role
-      ))
+      const updatedRole = await roleService.updateRole(id, data)
+      setRoles(prev => prev.map(role => role.id === id ? updatedRole : role))
+      return updatedRole
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update role')
-    } finally {
-      setLoading(false)
+      console.error('Error updating role:', err)
+      throw err
     }
-  }
+  }, [])
 
-  const deleteRole = async (roleId: string) => {
+  const deleteRole = useCallback(async (id: string): Promise<boolean> => {
     try {
-      setLoading(true)
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setRoles(prev => prev.filter(role => role.id !== roleId))
+      await roleService.deleteRole(id)
+      setRoles(prev => prev.filter(role => role.id !== id))
+      return true
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete role')
-    } finally {
-      setLoading(false)
+      console.error('Error deleting role:', err)
+      return false
     }
-  }
-
-  const refetch = () => {
-    fetchRoles()
-  }
-
-  // Calculate pagination info
-  const totalRoles = mockRoles.length
-  const totalPages = Math.ceil(totalRoles / filters.limit)
-  const hasNext = filters.page < totalPages
-  const hasPrev = filters.page > 1
-
-  const pagination = {
-    page: filters.page,
-    limit: filters.limit,
-    total: totalRoles,
-    totalPages,
-    hasNext,
-    hasPrev,
-  }
+  }, [])
 
   return {
     roles,
     loading,
     error,
     pagination,
+    fetchRoles,
     createRole,
     updateRole,
     deleteRole,
-    refetch,
   }
 }

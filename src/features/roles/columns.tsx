@@ -1,63 +1,51 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuLabel, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit, Trash2, Users, Eye } from "lucide-react"
 import { Role } from "./types"
+import { Badge } from "@/components/ui/badge"
+import { format } from "date-fns"
+import { Button } from "@/components/ui/button"
+import { MoreHorizontal, Edit, Trash2, Lock, Settings } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
-export const columns: ColumnDef<Role>[] = [
+export const createRoleColumns = (
+  onEdit?: (role: Role) => void,
+  onDelete?: (role: Role) => void,
+  onManage?: (role: Role) => void
+): ColumnDef<Role>[] => [
   {
-    accessorKey: "name",
-    header: "Role Name",
+    accessorKey: "code",
+    header: "Role Code",
     cell: ({ row }) => {
       const role = row.original
       return (
-        <div className="flex flex-col">
-          <span className="font-medium">{role.name}</span>
-          <span className="text-sm text-muted-foreground">{role.description}</span>
+        <div className="flex items-center space-x-3">
+          <div className="h-10 w-10 rounded-sm bg-muted flex items-center justify-center border">
+            <Lock className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <div className="space-y-1">
+            <div className="font-medium font-mono text-sm">{role.code}</div>
+            <div className="text-sm text-muted-foreground">{role.name}</div>
+          </div>
         </div>
       )
     },
   },
   {
-    accessorKey: "permissions",
-    header: "Permissions",
+    accessorKey: "description",
+    header: "Description",
     cell: ({ row }) => {
-      const permissions = row.getValue("permissions") as string[]
+      const description = row.getValue("description") as string
       return (
-        <div className="flex flex-wrap gap-1">
-          {permissions.slice(0, 3).map((permission) => (
-            <Badge key={permission} variant="info" className="text-xs">
-              {permission}
-            </Badge>
-          ))}
-          {permissions.length > 3 && (
-            <Badge variant="outline" className="text-xs">
-              +{permissions.length - 3} more
-            </Badge>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "userCount",
-    header: "Users",
-    cell: ({ row }) => {
-      const userCount = row.getValue("userCount") as number
-      return (
-        <div className="flex items-center gap-1">
-          <Users className="h-4 w-4 text-muted-foreground" />
-          <span>{userCount}</span>
+        <div className="text-sm text-muted-foreground max-w-[200px] line-clamp-2">
+          {description || "No description"}
         </div>
       )
     },
@@ -68,7 +56,7 @@ export const columns: ColumnDef<Role>[] = [
     cell: ({ row }) => {
       const isActive = row.getValue("isActive") as boolean
       return (
-        <Badge variant={isActive ? "success" : "warning"}>
+        <Badge variant={isActive ? "default" : "secondary"}>
           {isActive ? "Active" : "Inactive"}
         </Badge>
       )
@@ -78,12 +66,36 @@ export const columns: ColumnDef<Role>[] = [
     accessorKey: "createdAt",
     header: "Created",
     cell: ({ row }) => {
-      const date = new Date(row.getValue("createdAt"))
-      return <span className="text-sm text-muted-foreground">{date.toLocaleDateString()}</span>
+      const createdAt = row.getValue("createdAt") as string
+      return (
+        <div className="text-sm">
+          {format(new Date(createdAt), "MMM dd, yyyy")}
+        </div>
+      )
+    },
+  },
+  {
+    id: "manage",
+    header: "",
+    cell: ({ row }) => {
+      const role = row.original
+
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onManage?.(role)}
+          className="h-8"
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          Manage
+        </Button>
+      )
     },
   },
   {
     id: "actions",
+    header: "",
     cell: ({ row }) => {
       const role = row.original
 
@@ -97,21 +109,17 @@ export const columns: ColumnDef<Role>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(role.id)}>
-              Copy role ID
+            <DropdownMenuItem onClick={() => onEdit?.(role)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Eye className="mr-2 h-4 w-4" />
-              View Details
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Edit className="mr-2 h-4 w-4" />
-              Edit Role
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem 
+              onClick={() => onDelete?.(role)}
+              className="text-red-600"
+            >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete Role
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
