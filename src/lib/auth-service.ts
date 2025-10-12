@@ -16,8 +16,6 @@ async function refreshTokenHelper(): Promise<AuthResponse> {
 function clearUserData(): void {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('user_data')
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
   }
 }
 
@@ -28,12 +26,18 @@ export const authService = {
     console.log('Signing in with:', credentials.email);
     const response = await apiClient.post<AuthResponse>('/auth/signin', credentials);
     
-    
+    // Set tokens in cookies via API route
     if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken);
-    }
-    if (response.refreshToken) {
-      localStorage.setItem('refreshToken', response.refreshToken);
+      await fetch('/api/auth/set-tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+        }),
+      });
     }
     
     console.log('Sign in response:', response);
@@ -46,6 +50,8 @@ export const authService = {
   },
 
 
+  // Token refresh is now handled automatically by the proxy route
+  // This method is kept for backward compatibility but is no longer needed
   async refreshAccessToken(): Promise<AuthResponse> {
     return refreshTokenHelper()
   },
@@ -55,9 +61,15 @@ export const authService = {
     console.log('Auth service: Calling logout API');
     const response = await apiClient.post<{ message: string }>('/auth/logout');
     
-  
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    // Clear tokens from cookies via API route
+    await fetch('/api/auth/clear-tokens', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    // Clear user data from localStorage
     localStorage.removeItem('user_data');
     
     console.log('Auth service: Logout API response:', response);

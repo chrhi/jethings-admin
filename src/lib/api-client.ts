@@ -1,26 +1,14 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://jethings-backend.fly.dev'
 
-
-function getTokens(): { accessToken: string | null; refreshToken: string | null } {
-  if (typeof window === 'undefined') {
-    return { accessToken: null, refreshToken: null }
-  }
-  
-  const accessToken = localStorage.getItem('accessToken')
-  const refreshToken = localStorage.getItem('refreshToken')
-
-  return {
-    accessToken,
-    refreshToken
-  }
-}
-
-
 function redirectToSignin() {
   if (typeof window !== 'undefined') {
+    // Don't redirect if we're already on the signin page or auth pages
+    const currentPath = window.location.pathname
+    if (currentPath.startsWith('/signin') || currentPath.startsWith('/auth')) {
+      return
+    }
+    
     localStorage.removeItem('user_data')
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
     window.location.href = '/signin'
   }
 }
@@ -45,34 +33,27 @@ class ApiClient {
     endpoint: string,
     options: ApiClientOptions = {}
   ): Promise<T> {
-
     const { retryCount = 0, ...fetchOptions } = options
-    const { accessToken, refreshToken } = getTokens()
     
-    console.log('🔍 Debug - Tokens retrieved:', { 
-      accessToken: accessToken ? `${accessToken.substring(0, 20)}...` : 'null',
-      refreshToken: refreshToken ? `${refreshToken.substring(0, 20)}...` : 'null',
-      endpoint 
-    })
+    console.log('🔍 Debug - Making request to:', endpoint)
     
+    // Determine if this is an auth endpoint that should go directly to backend
+    const isAuthEndpoint = endpoint.startsWith('/auth/signin') || 
+                          endpoint.startsWith('/auth/signup') ||
+                          endpoint.startsWith('/auth/request-password-reset') ||
+                          endpoint.startsWith('/auth/verify-password-reset')
+    
+    const targetUrl = isAuthEndpoint 
+      ? `${API_BASE_URL}${endpoint}`
+      : `/api/auth/proxy${endpoint}`
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       ...fetchOptions.headers as Record<string, string>,
     }
     
-    
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`
-    }
-    if (refreshToken) {
-      headers['x-refresh-token'] = refreshToken
-    }
-    
- 
-    
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(targetUrl, {
         ...fetchOptions,
         headers,
         credentials: 'include',
@@ -80,52 +61,15 @@ class ApiClient {
       
       console.log('🔍 Debug - Response status:', response.status, 'for', endpoint)
       
-  
-      if (!response.ok && response.status === 401 && retryCount === 0) {
-        try {
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'An error occurred' }))
         
-       
-          const refreshResponse = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...(refreshToken && { 'x-refresh-token': refreshToken }),
-            },
-            credentials: 'include',
-          })
-          
-        
-          if (refreshResponse.ok) {
-            console.log('Token refreshed successfully, retrying request...')
-            
-         
-            const refreshData = await refreshResponse.json()
-            
-       
-            if (refreshData.accessToken) {
-              localStorage.setItem('accessToken', refreshData.accessToken)
-            }
-            if (refreshData.refreshToken) {
-              localStorage.setItem('refreshToken', refreshData.refreshToken)
-            }
-            
-            console.log('🔍 Debug - New tokens saved to localStorage')
-            
-        
-            return this.makeRequest<T>(endpoint, {
-              ...options,
-              retryCount: retryCount + 1,
-            })
-          }
-        } catch (refreshError) {
-          console.log('Token refresh failed:', refreshError)
+        // If we get a 401 and it's not an auth endpoint, redirect to signin
+        if (response.status === 401 && !isAuthEndpoint) {
           redirectToSignin()
           throw new Error('Authentication failed')
         }
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An error occurred' }))
+        
         throw new Error(errorData.message || `Request failed with status ${response.status}`)
       }
       

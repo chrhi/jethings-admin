@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/sidebar"
 import { SidebarContent } from "@/layout/sidebar-content"
 import OurSidebarHeader from "@/components/layout/sidebar-header"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 
 export default function DashboardLayout({
   children,
@@ -14,26 +15,28 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
-        <Sidebar 
-          variant="sidebar" 
-          collapsible="offcanvas"
-        >
-          <SidebarContent />
-          <SidebarFooter>
-          </SidebarFooter>
-          <SidebarRail />
-        </Sidebar>
+    <ProtectedRoute>
+      <SidebarProvider>
+          <Sidebar 
+            variant="sidebar" 
+            collapsible="offcanvas"
+          >
+            <SidebarContent />
+            <SidebarFooter>
+            </SidebarFooter>
+            <SidebarRail />
+          </Sidebar>
 
-        <div className="flex flex-col w-full">
-          <OurSidebarHeader />
-          <SidebarInset className="flex-1">
-            <div className="p-6">
-              {children}
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+          <div className="flex flex-col w-full">
+            <OurSidebarHeader />
+            <SidebarInset className="flex-1">
+              <div className="p-6">
+                {children}
+              </div>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+    </ProtectedRoute>
   )
 }
 

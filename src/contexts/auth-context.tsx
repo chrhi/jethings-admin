@@ -6,7 +6,6 @@ import {
   useCurrentUser, 
   useSignInMutation, 
   useLogoutMutation, 
-  useRefreshTokenMutation,
   useRequestPasswordResetMutation,
   useVerifyPasswordResetMutation
 } from '@/features/auth/hooks';
@@ -19,7 +18,6 @@ interface AuthContextType {
   requestPasswordReset: (data: ForgotPasswordData) => Promise<void>;
   verifyPasswordReset: (data: VerifyPasswordResetData) => Promise<void>;
   logout: () => Promise<void>;
-  refreshToken: () => Promise<void>;
   getCurrentUser: () => Promise<User | null>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
@@ -35,11 +33,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // React Query hooks
-  const { data: currentUser, isLoading: userLoading, error: userError } = useCurrentUser();
+  // Check if we're on an auth page (client-side only)
+  const isAuthPage = typeof window !== 'undefined' && 
+                     (window.location.pathname.startsWith('/signin') || 
+                      window.location.pathname.startsWith('/auth'));
+
+  // React Query hooks - disable useCurrentUser on auth pages to prevent 401 loops
+  const { data: currentUser, isLoading: userLoading, error: userError } = useCurrentUser(!isAuthPage);
   const signInMutation = useSignInMutation();
   const logoutMutation = useLogoutMutation();
-  const refreshTokenMutation = useRefreshTokenMutation();
   const requestPasswordResetMutation = useRequestPasswordResetMutation();
   const verifyPasswordResetMutation = useVerifyPasswordResetMutation();
 
@@ -111,16 +113,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const refreshToken = async () => {
-    try {
-      await refreshTokenMutation.mutateAsync();
-    } catch (error) {
-      // If refresh fails, user needs to sign in again
-      setUser(null);
-      throw error;
-    }
-  };
-
   const getCurrentUser = async () => {
     try {
       if (currentUser) {
@@ -147,7 +139,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     requestPasswordReset,
     verifyPasswordReset,
     logout,
-    refreshToken,
     getCurrentUser,
     isAdmin,
     isSuperAdmin,

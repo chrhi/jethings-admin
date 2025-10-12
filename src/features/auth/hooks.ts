@@ -15,12 +15,13 @@ export const useAuthCheck = () => {
   })
 }
 
-export const useCurrentUser = () => {
+export const useCurrentUser = (enabled: boolean = true) => {
   return useQuery({
     queryKey: authQueryKeys.currentUser(),
     queryFn: authQueries.getCurrentUser,
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled, // Allow disabling the query
   })
 }
 
@@ -73,8 +74,6 @@ export const useRefreshTokenMutation = () => {
     onError: (error: Error) => {
       // If refresh fails, clear all data
       queryClient.clear()
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
       localStorage.removeItem('user_data')
     },
   })
