@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { usersQueries } from './queries'
 import { usersMutations } from './mutations'
 import { queryKeys } from './query-keys'
-import { UserFilters, UserUpdateData, CreateAdminData } from './types'
+import { UserFilters, UserUpdateData, CreateAdminData, CreateInvitationDto } from './types'
 import toast from 'react-hot-toast'
 
 // Query hooks
@@ -188,6 +188,22 @@ export const useUnblockAdminMutation = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to unblock admin')
+    },
+  })
+}
+
+export const useCreateInvitationMutation = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: usersMutations.createInvitation,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.lists() })
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.stats() })
+      toast.success('Invitation sent successfully')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to send invitation')
     },
   })
 }
