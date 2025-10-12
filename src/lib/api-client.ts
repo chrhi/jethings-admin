@@ -41,7 +41,8 @@ class ApiClient {
     const isAuthEndpoint = endpoint.startsWith('/auth/signin') || 
                           endpoint.startsWith('/auth/signup') ||
                           endpoint.startsWith('/auth/request-password-reset') ||
-                          endpoint.startsWith('/auth/verify-password-reset')
+                          endpoint.startsWith('/auth/verify-password-reset') ||
+                          endpoint.startsWith('/auth/accept-invitation')
     
     const targetUrl = isAuthEndpoint 
       ? `${API_BASE_URL}${endpoint}`

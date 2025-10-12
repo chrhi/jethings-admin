@@ -6,7 +6,8 @@ const authRoutes = [
   '/signin',
   '/signin/forget-password',
   '/signin/forget-password/step2',
-  '/signin/create-first-admin'
+  '/signin/create-first-admin',
+  '/accept-invitation'
 ];
 
 // Define API routes that should be excluded from middleware

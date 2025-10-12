@@ -50,3 +50,12 @@ export interface LogoutResponse {
 export interface PasswordResetResponse {
   message: string
 }
+
+export interface AcceptInvitationData {
+  token: string
+  password: string
+}
+
+export interface AcceptInvitationResponse {
+  message: string
+}

@@ -5,7 +5,9 @@ import {
   ForgotPasswordData, 
   VerifyPasswordResetData, 
   LogoutResponse, 
-  PasswordResetResponse 
+  PasswordResetResponse,
+  AcceptInvitationData,
+  AcceptInvitationResponse
 } from './types'
 
 export const authMutations = {
@@ -72,5 +74,10 @@ export const authMutations = {
   // Verify password reset
   verifyPasswordReset: async (data: VerifyPasswordResetData): Promise<PasswordResetResponse> => {
     return apiClient.post<PasswordResetResponse>('/auth/verify-password-reset', data)
+  },
+
+  // Accept invitation
+  acceptInvitation: async (data: AcceptInvitationData): Promise<AcceptInvitationResponse> => {
+    return apiClient.post<AcceptInvitationResponse>('/auth/accept-invitation', data)
   },
 }
