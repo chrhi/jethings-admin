@@ -16,17 +16,17 @@ export const useAppConfigQuery = () => {
 }
 
 // Mutation hooks
-export const useCreateOrUpdateAppConfigMutation = () => {
+export const useCreateAppConfigMutation = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: appConfigMutations.createOrUpdateAppConfig,
+    mutationFn: appConfigMutations.createAppConfig,
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.appConfig.config(), data)
-      toast.success('Configuration mise à jour avec succès')
+      toast.success('Configuration créée avec succès')
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erreur lors de la sauvegarde')
+      toast.error(error.message || 'Erreur lors de la création')
     },
   })
 }
@@ -35,13 +35,14 @@ export const useUpdateAppConfigMutation = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: appConfigMutations.updateAppConfig,
+    mutationFn: ({ id, data }: { id: string; data: UpdateAppConfigRequest }) => 
+      appConfigMutations.updateAppConfig(id, data),
     onSuccess: (data) => {
       queryClient.setQueryData(queryKeys.appConfig.config(), data)
       toast.success('Configuration mise à jour avec succès')
     },
     onError: (error: Error) => {
-      toast.error(error.message || 'Erreur lors de la sauvegarde')
+      toast.error(error.message || 'Erreur lors de la mise à jour')
     },
   })
 }

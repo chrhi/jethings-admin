@@ -15,14 +15,14 @@ import { Breadcrumb, useBreadcrumbs } from "@/components/ui/breadcrumb"
 import { Save, Settings, Smartphone, AlertCircle, Loader2, AlertTriangle } from "lucide-react"
 import { usePathname } from "next/navigation"
 import { ConfigurationSkeleton } from "./_components/configuration-skeleton"
-import { useAppConfigQuery, useCreateOrUpdateAppConfigMutation } from "@/features/app-config"
+import { useAppConfigQuery, useCreateAppConfigMutation, useUpdateAppConfigMutation } from "@/features/app-config"
 import { CreateAppConfigRequest } from "@/features/app-config/types"
 
 const configSchema = z.object({
-  min_version: z.string().min(1, "La version minimale est requise"),
-  current_version: z.string().min(1, "La version actuelle est requise"),
-  release_notes: z.string().optional(),
-  is_active: z.boolean(),
+  minVersion: z.string().min(1, "La version minimale est requise"),
+  currentVersion: z.string().min(1, "La version actuelle est requise"),
+  releaseNotes: z.string().optional(),
+  isActive: z.boolean(),
 })
 
 type ConfigFormValues = z.infer<typeof configSchema>
@@ -33,33 +33,52 @@ export default function ConfigurationPage() {
 
 
   const { data: config, isLoading } = useAppConfigQuery()
-  const mutation = useCreateOrUpdateAppConfigMutation()
+  const createMutation = useCreateAppConfigMutation()
+  const updateMutation = useUpdateAppConfigMutation()
 
   const form = useForm<ConfigFormValues>({
     resolver: zodResolver(configSchema),
     mode: "onChange",
     defaultValues: {
-      min_version: "",
-      current_version: "",
-      release_notes: "",
-      is_active: true,
+      minVersion: "",
+      currentVersion: "",
+      releaseNotes: "",
+      isActive: true,
     },
   })
+
+  // Determine if we're creating or updating
+  const isCreating = !config
+  const mutation = isCreating ? createMutation : updateMutation
 
 
   useEffect(() => {
     if (config) {
       form.reset({
-        min_version: config.min_version,
-        current_version: config.current_version,
-        release_notes: config.release_notes || "",
-        is_active: config.is_active,
+        minVersion: config.minVersion,
+        currentVersion: config.currentVersion,
+        releaseNotes: config.releaseNotes || "",
+        isActive: config.isActive,
       })
     }
   }, [config, form])
 
   const onSubmit = (data: ConfigFormValues) => {
-    mutation.mutate(data as CreateAppConfigRequest)
+    const requestData: CreateAppConfigRequest = {
+      min_version: data.minVersion,
+      current_version: data.currentVersion,
+      release_notes: data.releaseNotes,
+      is_active: data.isActive,
+    }
+
+    if (isCreating) {
+      createMutation.mutate(requestData)
+    } else {
+      updateMutation.mutate({ 
+        id: config!.id, 
+        data: requestData 
+      })
+    }
   }
 
   if (isLoading) {
@@ -91,7 +110,7 @@ export default function ConfigurationPage() {
               ) : (
                 <Save className="h-4 w-4" />
               )}
-              {mutation.isPending ? "Sauvegarde..." : "Sauvegarder la configuration"}
+              {mutation.isPending ? "Sauvegarde..." : isCreating ? "Créer la configuration" : "Mettre à jour la configuration"}
             </Button>
           </div>
 
@@ -127,7 +146,7 @@ export default function ConfigurationPage() {
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="min_version"
+                  name="minVersion"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Version minimale *</FormLabel>
@@ -144,7 +163,7 @@ export default function ConfigurationPage() {
 
                 <FormField
                   control={form.control}
-                  name="current_version"
+                  name="currentVersion"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Version actuelle *</FormLabel>
@@ -162,7 +181,7 @@ export default function ConfigurationPage() {
               
               <FormField
                 control={form.control}
-                name="release_notes"
+                name="releaseNotes"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Notes de version</FormLabel>
@@ -183,7 +202,7 @@ export default function ConfigurationPage() {
 
               <FormField
                 control={form.control}
-                name="is_active"
+                name="isActive"
                 render={({ field }) => (
                   <FormItem className="flex items-center justify-between">
                     <div className="space-y-0.5">
@@ -223,7 +242,7 @@ export default function ConfigurationPage() {
                 <div>
                   <span className="font-medium text-muted-foreground">Statut:</span>
                   <p className="text-sm">
-                    {config?.is_active ? (
+                    {config?.isActive ? (
                       <span className="text-green-600">Active</span>
                     ) : (
                       <span className="text-red-600">Inactive</span>
