@@ -7,6 +7,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -18,8 +19,14 @@ export function SidebarContent() {
 
   return (
     <SidebarContentUI>
+      <SidebarHeader>
+        <div className="flex items-center gap-2 px-2 py-2">
+        
+          <span className="font-semibold text-lg">JeThings Admin</span>
+        </div>
+      </SidebarHeader>
       <SidebarGroup>
-        <SidebarGroupLabel>Overview</SidebarGroupLabel>
+        {sidebarOverview.length > 1 && <SidebarGroupLabel>Overview</SidebarGroupLabel>}
         <SidebarGroupContent>
           <SidebarMenu>
             {sidebarOverview.map((item) => {
@@ -41,7 +48,7 @@ export function SidebarContent() {
       </SidebarGroup>
       
       <SidebarGroup>
-        <SidebarGroupLabel>Users</SidebarGroupLabel>
+        {sidebarUsers.length > 1 && <SidebarGroupLabel>Users</SidebarGroupLabel>}
         <SidebarGroupContent>
           <SidebarMenu>
             {sidebarUsers.map((item) => {
@@ -64,7 +71,7 @@ export function SidebarContent() {
 
 
       <SidebarGroup>
-        <SidebarGroupLabel>Products</SidebarGroupLabel>
+        {sidebarProducts.length > 1 && <SidebarGroupLabel>Products</SidebarGroupLabel>}
         <SidebarGroupContent>
           <SidebarMenu>
             {sidebarProducts.map((item) => {
@@ -86,7 +93,7 @@ export function SidebarContent() {
       </SidebarGroup>
 
       <SidebarGroup>
-        <SidebarGroupLabel>Access Control</SidebarGroupLabel>
+        {sidebarAccessControl.length > 1 && <SidebarGroupLabel>Access Control</SidebarGroupLabel>}
         <SidebarGroupContent>
           <SidebarMenu>
             {sidebarAccessControl.map((item) => {
@@ -108,6 +115,7 @@ export function SidebarContent() {
       </SidebarGroup>
 
       <SidebarGroup className="mt-auto">
+        {sidebarFooter.length > 1 && <SidebarGroupLabel>Settings</SidebarGroupLabel>}
         <SidebarGroupContent>
           <SidebarMenu>
             {sidebarFooter.map((item) => {
