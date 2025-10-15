@@ -267,9 +267,9 @@ function SidebarTrigger({
       data-slot="sidebar-trigger"
       className={cn(
         "w-10 h-8 bg-primary rounded-lg cursor-pointer select-none",
-        "active:translate-y-2 active:[box-shadow:0_0px_0_0_#1b6ff8,0_0px_0_0_#1b70f841]",
+        "active:translate-y-2 active:[box-shadow:0_0px_0_0_hsl(var(--primary)),0_0px_0_0_hsl(var(--primary)/0.25)]",
         "active:border-b-[0px]",
-        "transition-all duration-150 [box-shadow:0_4px_0_0_#1b6ff8,0_6px_0_0_#1b70f841]",
+        "transition-all duration-150 [box-shadow:0_4px_0_0_hsl(var(--primary)),0_6px_0_0_hsl(var(--primary)/0.25)]",
         "border-b-[1px] border-primary/80",
         className
       )}

@@ -120,7 +120,7 @@ const KpiCards = ({ stats }: { stats: DashboardKpiStats }) => {
       id: 4,
       title: "Revenue",
       description: weeklyRange,
-      value: `$${(stats.processedMoney / 1000).toFixed(1)}K`,
+      value: `${(stats.processedMoney / 1000).toFixed(1)}K د.ج`,
       Icon: DollarSign,
       trendDirection: "up",
       trendPercentage: 22,

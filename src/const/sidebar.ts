@@ -30,21 +30,13 @@ export const sidebarUsers: SidebarItem[] = [
     icon: Users,
     href: "/users",
   },
-  {
-    label: "Gestion des rôles",
-    icon: UserCog,
-    href: "/admins",
-  },
+  
 ]
 
 
 
 export const sidebarProducts: SidebarItem[] = [
-  {
-    label: "Produits",
-    icon: Package,
-    href: "/products",
-  },
+
   {
     label: "Produits Types",
     icon: Tag,
