@@ -4,7 +4,9 @@ import {
   UserUpdateData, 
   CreateAdminData, 
   AdminResponse, 
-  UserActionResponse 
+  UserActionResponse,
+  CreateInvitationDto,
+  InvitationResponse
 } from './types'
 
 export const usersMutations = {
@@ -51,5 +53,10 @@ export const usersMutations = {
   // Unblock admin
   unblockAdmin: async (id: string): Promise<UserActionResponse> => {
     return apiClient.post<UserActionResponse>(`/users/admins/${id}/unblock`)
+  },
+
+  // Create invitation
+  createInvitation: async (data: CreateInvitationDto): Promise<InvitationResponse> => {
+    return apiClient.post<InvitationResponse>('/users/invite', data)
   },
 }

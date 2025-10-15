@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
-import { MoreHorizontal, Edit, Trash2, UserCheck, UserX, Loader2 } from "lucide-react"
+import { MoreHorizontal, Edit, Trash2, UserCheck, UserX, Loader2, Shield } from "lucide-react"
 import { 
   useUpdateUserMutation, 
   useDeactivateUserMutation, 
@@ -19,6 +19,7 @@ import {
   useDeleteUserMutation 
 } from "../hooks"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
+import { UserRoleModal } from "./user-role-modal"
 import toast from "react-hot-toast"
 
 interface UserActionsProps {
@@ -29,6 +30,7 @@ interface UserActionsProps {
 export function UserActions({ user, onUserUpdate }: UserActionsProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [statusDialogOpen, setStatusDialogOpen] = useState(false)
+  const [roleModalOpen, setRoleModalOpen] = useState(false)
 
   const updateUserMutation = useUpdateUserMutation()
   const deactivateUserMutation = useDeactivateUserMutation()
@@ -93,6 +95,15 @@ export function UserActions({ user, onUserUpdate }: UserActionsProps) {
           <DropdownMenuSeparator />
          
           <DropdownMenuItem
+            onClick={() => setRoleModalOpen(true)}
+            disabled={isLoading}
+          >
+            <Shield className="mr-2 h-4 w-4" />
+            Gérer les rôles
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+         
+          <DropdownMenuItem
             onClick={() => setStatusDialogOpen(true)}
             disabled={isLoading}
             className={user.isActive ? "text-orange-600" : "text-green-600"}
@@ -114,6 +125,13 @@ export function UserActions({ user, onUserUpdate }: UserActionsProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* User Role Management Modal */}
+      <UserRoleModal
+        open={roleModalOpen}
+        onOpenChange={setRoleModalOpen}
+        user={user}
+      />
 
       {/* Status Toggle Confirmation Dialog */}
       <ConfirmationDialog

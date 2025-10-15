@@ -88,6 +88,33 @@ export interface UserActionResponse {
   message: string;
 }
 
+// Invitation types
+export interface CreateInvitationDto {
+  email: string
+  firstName: string
+  lastName: string
+  roleId: string
+}
+
+export interface InvitationResponse {
+  id: string
+  email: string
+  token: string
+  status: 'pending' | 'accepted' | 'expired' | 'revoked'
+  role: {
+    id: string
+    name: string
+    code: string
+  }
+  expiresAt: string
+  createdAt: string
+}
+
+export interface PaginatedInvitationsResponse {
+  invitations: InvitationResponse[]
+  pagination: PaginationInfo
+}
+
 // Legacy Payment type for backward compatibility
 export type Payment = {
   id: string

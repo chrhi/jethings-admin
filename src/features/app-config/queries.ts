@@ -1,87 +1,130 @@
-// Mock data - replace with actual database calls
-let appConfig: AppConfig | null = {
-  id: "config_1",
-  min_version: "1.0.0",
-  current_version: "1.2.0",
-  release_notes: "Nouvelles fonctionnalités et corrections de bugs",
-  is_active: true,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString()
-}
+import { apiClient } from '@/lib/api-client'
+import { 
+  AppConfig, 
+  CreateAppConfigRequest, 
+  UpdateAppConfigRequest,
+  PaginatedAppConfigResponse,
+  AppConfigResponse,
+  CreateAppConfigDto,
+  UpdateAppConfigDto
+} from './types'
 
 export const appConfigQueries = {
-  // Fetch app configuration
-  fetchAppConfig: async (): Promise<AppConfig> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    if (!appConfig) {
-      throw new Error("Configuration non trouvée")
+  // Fetch app configuration - gets first item from paginated list
+  fetchAppConfig: async (): Promise<AppConfig | null> => {
+    try {
+      const response = await apiClient.get<PaginatedAppConfigResponse>('/app-config?page=1&limit=1')
+      
+      console.log('API Response:', response) // Debug log to see actual structure
+      console.log('Response type:', typeof response)
+      console.log('Response keys:', response ? Object.keys(response) : 'response is null/undefined')
+      
+      // Handle different possible response structures
+      let appConfigArray: any[] = []
+      
+      if (response) {
+        // Check if response has appConfig array
+        if (response.appConfig && Array.isArray(response.appConfig)) {
+          appConfigArray = response.appConfig
+        }
+        // Check if response is directly an array
+        else if (Array.isArray(response)) {
+          appConfigArray = response
+        }
+        // Check if response has data property
+        else if (response.data && Array.isArray(response.data)) {
+          appConfigArray = response.data
+        }
+        // Check if response has results property
+        else if (response.results && Array.isArray(response.results)) {
+          appConfigArray = response.results
+        }
+      }
+      
+      console.log('AppConfig array:', appConfigArray)
+      
+      // Return the first item if it exists, otherwise null
+      if (appConfigArray && appConfigArray.length > 0) {
+        const apiConfig = appConfigArray[0]
+        console.log('First config item:', apiConfig)
+        
+        // Map camelCase API response to frontend format
+        return {
+          id: apiConfig.id,
+          minVersion: apiConfig.minVersion || apiConfig.min_version,
+          currentVersion: apiConfig.currentVersion || apiConfig.current_version,
+          releaseNotes: apiConfig.releaseNotes || apiConfig.release_notes || '',
+          isActive: apiConfig.isActive !== undefined ? apiConfig.isActive : apiConfig.is_active,
+          createdAt: apiConfig.createdAt || apiConfig.created_at,
+          updatedAt: apiConfig.updatedAt || apiConfig.updated_at,
+        }
+      }
+      
+      console.log('No app config found, returning null')
+      return null
+    } catch (error) {
+      console.error('Error fetching app config:', error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined
+      })
+      throw error
     }
-    
-    return appConfig
   },
 }
 
 export const appConfigMutations = {
-  // Create or update app configuration
-  createOrUpdateAppConfig: async (data: CreateAppConfigRequest): Promise<AppConfig> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    // Validate required fields
-    if (!data.min_version || !data.current_version) {
-      throw new Error("Les champs min_version et current_version sont requis")
-    }
+  // Create app configuration
+  createAppConfig: async (data: CreateAppConfigRequest): Promise<AppConfig> => {
+    try {
+      const createData: CreateAppConfigDto = {
+        minVersion: data.min_version,
+        currentVersion: data.current_version,
+        releaseNotes: data.release_notes,
+        isActive: data.is_active ?? true,
+      }
 
-    // Validate version format (basic validation)
-    const versionRegex = /^\d+\.\d+\.\d+$/
-    if (!versionRegex.test(data.min_version) || !versionRegex.test(data.current_version)) {
-      throw new Error("Format de version invalide. Utilisez le format X.Y.Z")
+      const response = await apiClient.post<AppConfigResponse>('/app-config', createData)
+      // Map camelCase API response to frontend format
+      return {
+        id: response.id,
+        minVersion: response.minVersion,
+        currentVersion: response.currentVersion,
+        releaseNotes: response.releaseNotes,
+        isActive: response.isActive,
+        createdAt: response.createdAt,
+        updatedAt: response.updatedAt,
+      }
+    } catch (error) {
+      console.error('Error creating app config:', error)
+      throw error
     }
-
-    // Create or update configuration
-    const now = new Date().toISOString()
-    const newConfig: AppConfig = {
-      id: appConfig?.id || `config_${Date.now()}`,
-      min_version: data.min_version,
-      current_version: data.current_version,
-      release_notes: data.release_notes || "",
-      is_active: data.is_active ?? true,
-      created_at: appConfig?.created_at || now,
-      updated_at: now
-    }
-
-    appConfig = newConfig
-    return newConfig
   },
 
   // Update app configuration
-  updateAppConfig: async (data: UpdateAppConfigRequest): Promise<AppConfig> => {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    if (!appConfig) {
-      throw new Error("Configuration non trouvée")
-    }
+  updateAppConfig: async (id: string, data: UpdateAppConfigRequest): Promise<AppConfig> => {
+    try {
+      const updateData: UpdateAppConfigDto = {
+        minVersion: data.min_version,
+        currentVersion: data.current_version,
+        releaseNotes: data.release_notes,
+        isActive: data.is_active,
+      }
 
-    // Validate version format if provided
-    if (data.min_version && !/^\d+\.\d+\.\d+$/.test(data.min_version)) {
-      throw new Error("Format de version invalide pour min_version. Utilisez le format X.Y.Z")
+      const response = await apiClient.put<AppConfigResponse>(`/app-config/${id}`, updateData)
+      // Map camelCase API response to frontend format
+      return {
+        id: response.id,
+        minVersion: response.minVersion,
+        currentVersion: response.currentVersion,
+        releaseNotes: response.releaseNotes,
+        isActive: response.isActive,
+        createdAt: response.createdAt,
+        updatedAt: response.updatedAt,
+      }
+    } catch (error) {
+      console.error('Error updating app config:', error)
+      throw error
     }
-
-    if (data.current_version && !/^\d+\.\d+\.\d+$/.test(data.current_version)) {
-      throw new Error("Format de version invalide pour current_version. Utilisez le format X.Y.Z")
-    }
-
-    // Update configuration
-    const updatedConfig: AppConfig = {
-      ...appConfig,
-      ...data,
-      updated_at: new Date().toISOString()
-    }
-
-    appConfig = updatedConfig
-    return updatedConfig
   }
 }

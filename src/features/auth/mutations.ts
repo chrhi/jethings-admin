@@ -5,7 +5,9 @@ import {
   ForgotPasswordData, 
   VerifyPasswordResetData, 
   LogoutResponse, 
-  PasswordResetResponse 
+  PasswordResetResponse,
+  AcceptInvitationData,
+  AcceptInvitationResponse
 } from './types'
 
 export const authMutations = {
@@ -13,15 +15,21 @@ export const authMutations = {
   signIn: async (data: SignInData): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/signin', data)
     
-    // Save tokens to localStorage
+    // Set tokens in cookies via API route
     if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken)
-    }
-    if (response.refreshToken) {
-      localStorage.setItem('refreshToken', response.refreshToken)
+      await fetch('/api/auth/set-tokens', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+        }),
+      });
     }
     
-    // Save user data
+    // Save user data to localStorage
     if (response.user) {
       localStorage.setItem('user_data', JSON.stringify(response.user))
     }
@@ -33,30 +41,27 @@ export const authMutations = {
   logout: async (): Promise<LogoutResponse> => {
     const response = await apiClient.post<LogoutResponse>('/auth/logout')
     
-    // Clear tokens from localStorage
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
+    // Clear tokens from cookies via API route
+    await fetch('/api/auth/clear-tokens', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    // Clear user data from localStorage
     localStorage.removeItem('user_data')
     
     return response
   },
 
-  // Refresh access token
+  // Token refresh is now handled automatically by the proxy route
+  // This mutation is kept for backward compatibility but is no longer needed
   refreshToken: async (): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/refresh-token')
     
-    // Save new tokens to localStorage
-    if (response.accessToken) {
-      localStorage.setItem('accessToken', response.accessToken)
-    }
-    if (response.refreshToken) {
-      localStorage.setItem('refreshToken', response.refreshToken)
-    }
-    
-    // Update user data if provided
-    if (response.user) {
-      localStorage.setItem('user_data', JSON.stringify(response.user))
-    }
+    // Note: Token refresh is now handled automatically by the proxy route
+    // This is kept for backward compatibility
     
     return response
   },
@@ -69,5 +74,10 @@ export const authMutations = {
   // Verify password reset
   verifyPasswordReset: async (data: VerifyPasswordResetData): Promise<PasswordResetResponse> => {
     return apiClient.post<PasswordResetResponse>('/auth/verify-password-reset', data)
+  },
+
+  // Accept invitation
+  acceptInvitation: async (data: AcceptInvitationData): Promise<AcceptInvitationResponse> => {
+    return apiClient.post<AcceptInvitationResponse>('/auth/accept-invitation', data)
   },
 }

@@ -5,7 +5,13 @@ export type SidebarItem = {
   label: string
   href: string
   icon: LucideIcon
-  items?: SidebarItem[]
+}
+
+export type SidebarGroup = {
+  id: string
+  label: string
+  icon: LucideIcon
+  items: SidebarItem[]
 }
 
 export const sidebarOverview: SidebarItem[] = [
@@ -73,5 +79,38 @@ export const sidebarFooter: SidebarItem[] = [
     label: "Paramètres",
     icon: Settings,
     href: "/settings",
+  },
+]
+
+export const sidebarGroups: SidebarGroup[] = [
+  {
+    id: "overview",
+    label: "Overview",
+    icon: Home,
+    items: sidebarOverview,
+  },
+  {
+    id: "users",
+    label: "Users",
+    icon: Users,
+    items: sidebarUsers,
+  },
+  {
+    id: "products",
+    label: "Products",
+    icon: Package,
+    items: sidebarProducts,
+  },
+  {
+    id: "access-control",
+    label: "Access Control",
+    icon: Shield,
+    items: sidebarAccessControl,
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    items: sidebarFooter,
   },
 ]

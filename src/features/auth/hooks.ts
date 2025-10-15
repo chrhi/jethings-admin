@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { authQueries } from './queries'
 import { authMutations } from './mutations'
 import { authQueryKeys } from './query-keys'
-import { SignInData, ForgotPasswordData, VerifyPasswordResetData } from './types'
+import { SignInData, ForgotPasswordData, VerifyPasswordResetData, AcceptInvitationData } from './types'
 import toast from 'react-hot-toast'
 
 // Query hooks
@@ -15,12 +15,13 @@ export const useAuthCheck = () => {
   })
 }
 
-export const useCurrentUser = () => {
+export const useCurrentUser = (enabled: boolean = true) => {
   return useQuery({
     queryKey: authQueryKeys.currentUser(),
     queryFn: authQueries.getCurrentUser,
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    enabled, // Allow disabling the query
   })
 }
 
@@ -73,8 +74,6 @@ export const useRefreshTokenMutation = () => {
     onError: (error: Error) => {
       // If refresh fails, clear all data
       queryClient.clear()
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
       localStorage.removeItem('user_data')
     },
   })
@@ -100,6 +99,18 @@ export const useVerifyPasswordResetMutation = () => {
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Erreur lors de la réinitialisation')
+    },
+  })
+}
+
+export const useAcceptInvitationMutation = () => {
+  return useMutation({
+    mutationFn: authMutations.acceptInvitation,
+    onSuccess: () => {
+      toast.success('Compte créé avec succès!')
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Erreur lors de la création du compte')
     },
   })
 }

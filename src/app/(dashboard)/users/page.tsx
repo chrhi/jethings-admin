@@ -1,81 +1,86 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent} from "@/components/ui/card"
-import { DataTable } from "@/features/users/table"
-import { createColumns } from "@/features/users/columns"
-import { UserStatsComponent} from "@/features/users/components/user-stats"
-import { PaginationComponent } from "@/features/users/components/pagination"
-import { useUsersQuery, useUserStatsQuery } from "@/features/users/hooks"
-import { UserFilters } from "@/features/users/types"
-import {  Download, RefreshCw, FileSpreadsheet } from "lucide-react"
-import { exportUsersToExcel, exportUsersToCSV } from "@/lib/export-utils"
-import toast from "react-hot-toast"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { DataTable } from "@/features/users/table";
+import { createColumns } from "@/features/users/columns";
+import { UserStatsComponent } from "@/features/users/components/user-stats";
+import { PaginationComponent } from "@/features/users/components/pagination";
+import { useUsersQuery, useUserStatsQuery } from "@/features/users/hooks";
+import { UserFilters } from "@/features/users/types";
+import { Download, RefreshCw, FileSpreadsheet } from "lucide-react";
+import { exportUsersToExcel, exportUsersToCSV } from "@/lib/export-utils";
+import toast from "react-hot-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { InviteUserModal } from "@/features/users/components/invite-user-modal";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UserFilters>({
     page: 1,
     limit: 10,
-    sortBy: 'createdAt',
-    sortOrder: 'desc'
-  })
+    sortBy: "createdAt",
+    sortOrder: "desc",
+  });
 
-  const { data: usersData, isLoading: loading, error, refetch } = useUsersQuery(filters)
-  const { data: stats, isLoading: statsLoading } = useUserStatsQuery()
+  const {
+    data: usersData,
+    isLoading: loading,
+    error,
+    refetch,
+  } = useUsersQuery(filters);
+  const { data: stats, isLoading: statsLoading } = useUserStatsQuery();
 
-  const users = usersData?.users || []
-  const pagination = usersData?.pagination || null
+  const users = usersData?.users || [];
+  const pagination = usersData?.pagination || null;
 
   const handlePageChange = (page: number) => {
-    setFilters(prev => ({ ...prev, page }))
-  }
+    setFilters((prev) => ({ ...prev, page }));
+  };
 
   const handleLimitChange = (limit: number) => {
-    setFilters(prev => ({ ...prev, limit, page: 1 }))
-  }
+    setFilters((prev) => ({ ...prev, limit, page: 1 }));
+  };
 
   const handleRefresh = () => {
-    refetch()
-  }
+    refetch();
+  };
 
   const handleExportExcel = () => {
     try {
       exportUsersToExcel(users, {
-        filename: 'users',
-        sheetName: 'Users',
-        includeHeaders: true
-      })
-      toast.success(`${users.length} utilisateurs exportés vers Excel avec succès !`)
+        filename: "users",
+        sheetName: "Users",
+        includeHeaders: true,
+      });
+      toast.success(
+        `${users.length} utilisateurs exportés vers Excel avec succès !`
+      );
     } catch (error) {
-      console.error('Error exporting to Excel:', error)
-      toast.error('Échec de l\'exportation vers Excel. Veuillez réessayer.')
+      console.error("Error exporting to Excel:", error);
+      toast.error("Échec de l'exportation vers Excel. Veuillez réessayer.");
     }
-  }
+  };
 
   const handleExportCSV = () => {
     try {
       exportUsersToCSV(users, {
-        filename: 'users',
-        includeHeaders: true
-      })
-      toast.success(`${users.length} utilisateurs exportés vers CSV avec succès !`)
+        filename: "users",
+        includeHeaders: true,
+      });
+      toast.success(
+        `${users.length} utilisateurs exportés vers CSV avec succès !`
+      );
     } catch (error) {
-      console.error('Error exporting to CSV:', error)
-      toast.error('Échec de l\'exportation vers CSV. Veuillez réessayer.')
+      console.error("Error exporting to CSV:", error);
+      toast.error("Échec de l'exportation vers CSV. Veuillez réessayer.");
     }
-  }
-
-  const handleCreateUser = () => {
-  
-    console.log('Create user')
-  }
+  };
 
   return (
     <div className="space-y-6">
@@ -87,16 +92,19 @@ export default function UsersPage() {
             Manage and monitor user accounts
           </p>
         </div>
-        
-      
+
         <div className="flex items-center space-x-2">
           <Button variant="outline" onClick={handleRefresh} disabled={loading}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualiser
           </Button>
+          <InviteUserModal />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" disabled={loading || users.length === 0}>
+              <Button
+                variant="outline"
+                disabled={loading || users.length === 0}
+              >
                 <Download className="h-4 w-4 mr-2" />
                 Exporter
               </Button>
@@ -112,15 +120,11 @@ export default function UsersPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-         
         </div>
       </div>
 
-
       {/* Stats */}
       <UserStatsComponent stats={stats || null} loading={statsLoading} />
-
-
 
       {/* Error State */}
       {error && (
@@ -138,15 +142,14 @@ export default function UsersPage() {
 
       {/* Users Table */}
       <Card className="border-none p-0">
-    
         <CardContent className="p-0">
-          <DataTable 
-            columns={createColumns(refetch)} 
-            data={users} 
+          <DataTable
+            columns={createColumns(refetch)}
+            data={users}
             loading={loading}
             onUserUpdate={refetch}
           />
-          
+
           {/* Pagination */}
           <div className="mt-4">
             <PaginationComponent
@@ -159,5 +162,5 @@ export default function UsersPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
