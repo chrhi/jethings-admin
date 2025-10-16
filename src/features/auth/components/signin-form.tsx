@@ -138,8 +138,21 @@ function SignInFormContent() {
 
 export function SignInForm() {
   return (
- 
+    <Suspense fallback={
+      <Card className="w-full shadow-none border">
+        <CardHeader className="space-y-1 pb-6">
+          <CardTitle className="text-2xl font-bold text-center">
+            Chargement...
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        </CardContent>
+      </Card>
+    }>
       <SignInFormContent />
-    
+    </Suspense>
   );
 }
