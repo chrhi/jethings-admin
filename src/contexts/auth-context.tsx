@@ -34,12 +34,19 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthPage, setIsAuthPage] = useState(false);
 
   // Check if we're on an auth page (client-side only)
-  const isAuthPage = typeof window !== 'undefined' && 
-                     (window.location.pathname.startsWith('/signin') || 
-                      window.location.pathname.startsWith('/auth') ||
-                      window.location.pathname.startsWith('/accept-invitation'));
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const checkAuthPage = () => {
+        return window.location.pathname.startsWith('/signin') || 
+               window.location.pathname.startsWith('/auth') ||
+               window.location.pathname.startsWith('/accept-invitation');
+      };
+      setIsAuthPage(checkAuthPage());
+    }
+  }, []);
 
   // React Query hooks - disable useCurrentUser on auth pages to prevent 401 loops
   const { data: currentUser, isLoading: userLoading, error: userError } = useCurrentUser(!isAuthPage);
@@ -53,28 +60,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     if (currentUser) {
       setUser(currentUser);
-      setIsLoading(false);
-    } else if (userError) {
+      // Save to localStorage for persistence
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user_data', JSON.stringify(currentUser));
+      }
+    } else if (userError && !isAuthPage) {
+      // Only clear user data if we're not on an auth page
       setUser(null);
-      setIsLoading(false);
-    } else if (!userLoading) {
-      setIsLoading(false);
-    }
-  }, [currentUser, userError, userLoading]);
-
-  // Check for stored user data on mount
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user_data');
-    if (storedUser && !currentUser) {
-      try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-      } catch (error) {
+      if (typeof window !== 'undefined') {
         localStorage.removeItem('user_data');
       }
     }
-    setIsLoading(false);
-  }, [currentUser]);
+    
+    // Only set loading to false when we have a definitive answer
+    if (!userLoading) {
+      setIsLoading(false);
+    }
+  }, [currentUser, userError, userLoading, isAuthPage]);
 
   const signIn = async (data: SignInData) => {
     try {

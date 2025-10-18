@@ -20,7 +20,6 @@ export const sidebarOverview: SidebarItem[] = [
     icon: Home,
     href: "/",
   },
- 
 ]
 
 
@@ -30,13 +29,11 @@ export const sidebarUsers: SidebarItem[] = [
     icon: Users,
     href: "/users",
   },
-  
 ]
 
 
 
 export const sidebarProducts: SidebarItem[] = [
-
   {
     label: "Produits Types",
     icon: Tag,

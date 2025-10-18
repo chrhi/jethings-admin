@@ -7,6 +7,9 @@ import { ConfirmationProvider } from "@/contexts/confirmation-context";
 import { ConfirmationModal } from "@/components/modals/confirmation-modal";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./theme-provider";
+import { ErrorBoundary } from "./error-boundary";
+import { AccessAwareErrorBoundary } from "./access-aware-error-boundary";
+import { NetworkStatusBanner } from "./network-status-banner";
 
 interface ProvidersProps {
   children: ReactNode;
@@ -20,51 +23,60 @@ export default function Providers({ children }: ProvidersProps) {
           queries: {
             refetchOnWindowFocus: false,
             retry: 1,
+            // Add error handling
+            throwOnError: false,
+          },
+          mutations: {
+            // Add error handling
+            throwOnError: false,
           },
         },
       })
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-        suppressHydrationWarning
-      >
-        <AuthProvider>
-          <ConfirmationProvider>
-            {children}
-            <ConfirmationModal />
-            <Toaster 
-              position="top-right"
-              toastOptions={{
-                duration: 4000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
-                  duration: 3000,
-                  iconTheme: {
-                    primary: '#4ade80',
-                    secondary: '#fff',
+    <AccessAwareErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          suppressHydrationWarning
+        >
+          <AuthProvider>
+            <ConfirmationProvider>
+              <NetworkStatusBanner />
+              {children}
+              <ConfirmationModal />
+              <Toaster 
+                position="top-right"
+                toastOptions={{
+                  duration: 4000,
+                  style: {
+                    background: '#363636',
+                    color: '#fff',
                   },
-                },
-                error: {
-                  duration: 5000,
-                  iconTheme: {
-                    primary: '#ef4444',
-                    secondary: '#fff',
+                  success: {
+                    duration: 3000,
+                    iconTheme: {
+                      primary: '#4ade80',
+                      secondary: '#fff',
+                    },
                   },
-                },
-              }}
-            />
-          </ConfirmationProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+                  error: {
+                    duration: 5000,
+                    iconTheme: {
+                      primary: '#ef4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </ConfirmationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AccessAwareErrorBoundary>
   );
 }

@@ -53,6 +53,8 @@ async function handleRequest(
     const queryString = url.search;
     const backendUrl = `${API_BASE_URL}${path}${queryString}`;
 
+    console.log(`[Proxy] ${method} ${path}${queryString}`);
+
     // Get tokens from cookies
     const accessToken = request.cookies.get('accessToken')?.value;
     const refreshToken = request.cookies.get('refreshToken')?.value;
@@ -65,9 +67,13 @@ async function handleRequest(
     // Add authorization headers if tokens exist
     if (accessToken) {
       headers['Authorization'] = `Bearer ${accessToken}`;
+      console.log('[Proxy] Access token present');
+    } else {
+      console.log('[Proxy] No access token found');
     }
     if (refreshToken) {
       headers['x-refresh-token'] = refreshToken;
+      console.log('[Proxy] Refresh token present');
     }
 
     // Prepare request body for non-GET requests
@@ -76,18 +82,24 @@ async function handleRequest(
       try {
         const requestBody = await request.text();
         body = requestBody || undefined;
+        if (body) {
+          console.log('[Proxy] Request body length:', body.length);
+        }
       } catch (error) {
-        // If no body, continue without it
+        console.error('[Proxy] Error reading request body:', error);
       }
     }
 
     // Make request to backend
+    console.log('[Proxy] Sending request to:', backendUrl);
     const backendResponse = await fetch(backendUrl, {
       method,
       headers,
       body,
       credentials: 'include',
     });
+
+    console.log(`[Proxy] Backend response: ${backendResponse.status} ${backendResponse.statusText}`);
 
     // Create response
     const response = new NextResponse(backendResponse.body, {
@@ -117,6 +129,7 @@ async function handleRequest(
     const tokenRefreshed = backendResponse.headers.get('x-token-refreshed');
 
     if (tokenRefreshed === 'true' && newAccessToken) {
+      console.log('[Proxy] Token refreshed, updating cookies');
       // Update access token cookie
       response.cookies.set('accessToken', newAccessToken, {
         httpOnly: true,
@@ -140,9 +153,19 @@ async function handleRequest(
 
     return response;
   } catch (error) {
-    console.error('Proxy request error:', error);
+    console.error('[Proxy] Request error:', {
+      path: pathSegments.join('/'),
+      method,
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    
     return NextResponse.json(
-      { error: 'Proxy request failed' },
+      { 
+        error: 'Proxy request failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+        path: `/${pathSegments.join('/')}`,
+      },
       { status: 500 }
     );
   }
