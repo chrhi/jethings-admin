@@ -33,7 +33,6 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   loading = false,
-  onUserUpdate,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
@@ -54,7 +53,7 @@ export function DataTable<TData, TValue>({
 
   if (loading) {
     return (
-      <div className="overflow-hidden rounded-md border">
+      <div className="overflow-hidden rounded-md border bg-card">
         <Table>
           <TableHeader>
             {Array.from({ length: 1 }).map((_, i) => (
@@ -84,7 +83,7 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border">
+    <div className="overflow-hidden rounded-md border bg-card">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (

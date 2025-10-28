@@ -14,15 +14,14 @@ export function ClickableUserName({ user }: ClickableUserNameProps) {
   return (
     <>
       <div 
-        className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 p-2 rounded-md transition-colors"
+        className="flex items-center space-x-2 cursor-pointer p-2 rounded-md transition-colors"
         onClick={() => setModalOpen(true)}
       >
-        
         <div>
           <div className="font-medium hover:text-blue-600 transition-colors">
             {user.firstName} {user.lastName}
           </div>
-          <div className="text-sm text-gray-500">{user.email}</div>
+          <div className="text-sm text-gray-500 dark:text-gray-100">{user.email}</div>
         </div>
       </div>
 

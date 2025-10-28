@@ -20,7 +20,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 
@@ -79,15 +78,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="flex items-center py-4">
-        <Input
-          placeholder="Rechercher un magasin..."
-          value={globalFilter ?? ""}
-          onChange={(event) => setGlobalFilter(String(event.target.value))}
-          className="max-w-sm"
-        />
-      </div>
+     
 
       {/* Table */}
       <div className="rounded-md border">

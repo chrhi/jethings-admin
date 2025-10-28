@@ -52,21 +52,7 @@ export const sidebarAccessControl: SidebarItem[] = [
     icon: Shield,
     href: "/resources",
   },
-  {
-    label: "Actions",
-    icon: Zap,
-    href: "/actions",
-  },
-  {
-    label: "Roles",
-    icon: Lock,
-    href: "/roles",
-  },
-  {
-    label: "Policies",
-    icon: FileText,
-    href: "/policies",
-  },
+  
 ]
 
 
@@ -110,4 +96,12 @@ export const sidebarGroups: SidebarGroup[] = [
     icon: Settings,
     items: sidebarFooter,
   },
+]
+
+export const sidebarItems: SidebarItem[] = [
+  ...sidebarOverview,
+  ...sidebarUsers,
+  ...sidebarProducts,
+  ...sidebarAccessControl,
+  ...sidebarFooter,
 ]

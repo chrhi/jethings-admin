@@ -46,7 +46,7 @@ export interface StoreFilters {
 }
 
 export interface StoreResponse {
-  stores: Store[]
+  store: Store[]
   pagination: {
     page: number
     limit: number

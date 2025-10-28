@@ -30,7 +30,7 @@ export default function DashboardLayout({
           <div className="flex flex-col w-full">
             <OurSidebarHeader />
             <SidebarInset className="flex-1">
-              <div className="p-6">
+              <div className="">
                 {children}
               </div>
             </SidebarInset>

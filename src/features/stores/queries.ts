@@ -6,6 +6,7 @@ import {
 } from './types'
 
 export const storesQueries = {
+  
   // Fetch stores with filters
   fetchStores: async (filters: StoreFilters = {}): Promise<StoreResponse> => {
     const params = new URLSearchParams()
@@ -23,10 +24,7 @@ export const storesQueries = {
     return apiClient.get<StoreResponse>(`/stores?${params}`)
   },
 
-  // Fetch current user's stores
-  fetchMyStores: async (): Promise<Store[]> => {
-    return apiClient.get<Store[]>('/stores/my')
-  },
+
 
   // Fetch store by ID
   fetchStoreById: async (id: string): Promise<Store> => {

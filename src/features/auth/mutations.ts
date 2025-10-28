@@ -9,31 +9,26 @@ import {
   AcceptInvitationData,
   AcceptInvitationResponse
 } from './types'
+import { removeCookie, setCookie } from '@/lib/cookies'
 
 export const authMutations = {
   // Sign in user
   signIn: async (data: SignInData): Promise<AuthResponse> => {
     const response = await apiClient.post<AuthResponse>('/auth/signin', data)
     
-    // Set tokens in cookies via API route
-    if (response.accessToken) {
-      await fetch('/api/auth/set-tokens', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          accessToken: response.accessToken,
-          refreshToken: response.refreshToken,
-        }),
-      });
-    }
     
-    // Save user data to localStorage
-    if (response.user) {
-      localStorage.setItem('user_data', JSON.stringify(response.user))
-    }
-    
+        // Save tokens to cookies
+        if (response.accessToken) {
+          setCookie('accessToken', response.accessToken, 7) // 7 days
+        }
+        if (response.refreshToken) {
+          setCookie('refreshToken', response.refreshToken, 30) // 30 days
+        }
+        
+        // Save user data to localStorage
+        if (response.user) {
+          localStorage.setItem('user_data', JSON.stringify(response.user))
+        }
     return response
   },
 
@@ -41,16 +36,13 @@ export const authMutations = {
   logout: async (): Promise<LogoutResponse> => {
     const response = await apiClient.post<LogoutResponse>('/auth/logout')
     
-    // Clear tokens from cookies via API route
-    await fetch('/api/auth/clear-tokens', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    // Clear user data from localStorage
-    localStorage.removeItem('user_data')
+  
+     // Clear tokens from cookies
+     removeCookie('accessToken')
+     removeCookie('refreshToken')
+     
+     // Clear user data from localStorage
+     localStorage.removeItem('user_data')
     
     return response
   },

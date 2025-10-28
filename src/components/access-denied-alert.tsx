@@ -25,7 +25,7 @@ export function AccessDeniedAlert({
   const router = useRouter();
 
   return (
-    <div className={`flex items-center justify-center min-h-[400px] p-4 ${className}`}>
+    <div className={`flex items-center justify-center min-h-[400px] p-4 bg-red-100 ${className}`}>
       <Card className="w-full max-w-md border-amber-200 bg-amber-50/50 dark:border-amber-800 dark:bg-amber-950/20">
         <CardHeader className="text-center pb-4">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">

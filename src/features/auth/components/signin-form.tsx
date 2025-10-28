@@ -40,9 +40,8 @@ function SignInFormContent() {
     setError(null);
     try {
       await signIn(data);
-      // Small delay to ensure cookies are set
-      await new Promise(resolve => setTimeout(resolve, 100));
-      // Redirect to the intended page or main dashboard
+  
+   
       const redirectTo = searchParams.get('redirect') || '/';
       console.log('Redirecting to:', redirectTo);
       router.push(redirectTo);

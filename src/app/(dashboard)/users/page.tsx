@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/features/users/table";
 import { createColumns } from "@/features/users/columns";
-import { UserStatsComponent } from "@/features/users/components/user-stats";
 import { PaginationComponent } from "@/features/users/components/pagination";
 import { useUsersQuery, useUserStatsQuery } from "@/features/users/hooks";
 import { UserFilters } from "@/features/users/types";
@@ -19,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InviteUserModal } from "@/features/users/components/invite-user-modal";
+import AcessDeniedCard from "@/components/access-denied-card";
 
 export default function UsersPage() {
   const [filters, setFilters] = useState<UserFilters>({
@@ -34,7 +34,7 @@ export default function UsersPage() {
     error,
     refetch,
   } = useUsersQuery(filters);
-  const { data: stats, isLoading: statsLoading } = useUserStatsQuery();
+
 
   const users = usersData?.users || [];
   const pagination = usersData?.pagination || null;
@@ -82,15 +82,20 @@ export default function UsersPage() {
     }
   };
 
+  if(error){
+
+
+    return (
+      <AcessDeniedCard />
+    )
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Users</h1>
-          <p className="text-muted-foreground">
-            Manage and monitor user accounts
-          </p>
         </div>
 
         <div className="flex items-center space-x-2">
@@ -123,26 +128,8 @@ export default function UsersPage() {
         </div>
       </div>
 
-      {/* Stats */}
-      <UserStatsComponent stats={stats || null} loading={statsLoading} />
 
-      {/* Error State */}
-      {error && (
-        <Card className="border-destructive ">
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <p className="text-destructive mb-4">{error.message}</p>
-              <Button variant="outline" onClick={handleRefresh}>
-                Try Again
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Users Table */}
-      <Card className="border-none p-0">
-        <CardContent className="p-0">
+     
           <DataTable
             columns={createColumns(refetch)}
             data={users}
@@ -159,8 +146,7 @@ export default function UsersPage() {
               loading={loading}
             />
           </div>
-        </CardContent>
-      </Card>
+      
     </div>
   );
 }

@@ -10,7 +10,7 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Jethings Admin",
+  title: "Jethings",
   description: "Jethings Admin pour gérer Jethings",
 };
 
