@@ -26,12 +26,8 @@ export const createColumns = (
       const productType = row.original
       return (
         <div className="space-y-1">
-          <div className="font-medium">{productType.name}</div>
-          {productType.description && (
-            <div className="text-sm text-muted-foreground line-clamp-2">
-              {productType.description}
-            </div>
-          )}
+          <div className="font-medium">{productType?.nameFr}</div>
+         
         </div>
       )
     },

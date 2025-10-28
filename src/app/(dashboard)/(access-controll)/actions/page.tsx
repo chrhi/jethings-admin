@@ -101,9 +101,7 @@ export default function ActionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Actions Management</h1>
-          <p className="text-muted-foreground">
-            Manage and configure actions across all resources
-          </p>
+       
         </div>
         <Button onClick={() => setModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />

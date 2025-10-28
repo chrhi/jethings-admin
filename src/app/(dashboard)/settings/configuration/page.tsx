@@ -47,7 +47,7 @@ export default function ConfigurationPage() {
     },
   })
 
-  // Determine if we're creating or updating
+
   const isCreating = !config
   const mutation = isCreating ? createMutation : updateMutation
 
@@ -86,7 +86,7 @@ export default function ConfigurationPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4">
       <div className="space-y-2">
         <Breadcrumb items={breadcrumbs} />
         <h1 className="text-3xl font-bold tracking-tight">Configuration de l'application</h1>
@@ -249,14 +249,7 @@ export default function ConfigurationPage() {
                     )}
                   </p>
                 </div>
-                <div>
-                  <span className="font-medium text-muted-foreground">Créée le:</span>
-                  <p className="text-sm">{config?.created_at || "Non défini"}</p>
-                </div>
-                <div>
-                  <span className="font-medium text-muted-foreground">Modifiée le:</span>
-                  <p className="text-sm">{config?.updated_at || "Non défini"}</p>
-                </div>
+             
               </div>
             </CardContent>
           </Card>

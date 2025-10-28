@@ -6,16 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import toast from "react-hot-toast"
 import { ConfirmationDialog } from "@/components/ui/confirmation-dialog"
-import { Pagination } from "@/components/ui/pagination"
-
-// Product Types Components
 import { ProductTypeTable } from "@/features/products/table"
 import { createColumns } from "@/features/products/columns"
 import { ProductTypeModal } from "@/features/products/components/product-type-modal"
-import { ProductTypeStatsComponent } from "@/features/products/components/product-type-stats"
 import { ProductTypeFiltersComponent } from "@/features/products/components/product-type-filters"
-
-// Types and Hooks
 import { ProductType, ProductTypeFilters } from "@/features/products/types"
 import { useProductTypes, useProductTypeStats, useProductTypeActions } from "@/hooks/use-product-types"
 
@@ -35,8 +29,11 @@ export default function ProductTypesPage() {
   const { stats, loading: statsLoading } = useProductTypeStats()
   const { createProductType, updateProductType, deleteProductType, loading: actionLoading } = useProductTypeActions()
 
+
+
+  console.log(productTypesData)
   // Extract product types from the response
-  const productTypes = Array.isArray(productTypesData) ? productTypesData : []
+  const productTypes = Array.isArray(productTypesData?.productTypes) ? productTypesData?.productTypes : []
 
   // Table columns with action handlers
   const columns = createColumns(
@@ -109,7 +106,7 @@ export default function ProductTypesPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 px-4">
       {/* Header */}
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
@@ -124,20 +121,9 @@ export default function ProductTypesPage() {
         </Button>
       </div>
 
-      {/* Stats */}
-      <ProductTypeStatsComponent stats={stats} loading={statsLoading} />
-
-      {/* Filters and Table */}
-      <Card className="rounded-sm">
-        <CardHeader>
-          <CardTitle>Product Types</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <ProductTypeFiltersComponent
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            onClearFilters={handleClearFilters}
-          />
+    
+   
+        
           
           <ProductTypeTable
             columns={columns}
@@ -153,8 +139,7 @@ export default function ProductTypesPage() {
               </p>
             </div>
           )}
-        </CardContent>
-      </Card>
+       
 
       {/* Create/Edit Modal */}
       <ProductTypeModal

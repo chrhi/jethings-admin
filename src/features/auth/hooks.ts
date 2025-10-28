@@ -5,13 +5,13 @@ import { authQueryKeys } from './query-keys'
 import { SignInData, ForgotPasswordData, VerifyPasswordResetData, AcceptInvitationData } from './types'
 import toast from 'react-hot-toast'
 
-// Query hooks
+
 export const useAuthCheck = () => {
   return useQuery({
     queryKey: authQueryKeys.check(),
     queryFn: authQueries.checkAuth,
     retry: false,
-    staleTime: 0, // Always fresh
+    staleTime: 0, 
   })
 }
 
@@ -20,8 +20,8 @@ export const useCurrentUser = (enabled: boolean = true) => {
     queryKey: authQueryKeys.currentUser(),
     queryFn: authQueries.getCurrentUser,
     retry: false,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled, // Allow disabling the query
+    staleTime: 5 * 60 * 1000, 
+    enabled,
   })
 }
 
@@ -32,7 +32,7 @@ export const useSignInMutation = () => {
   return useMutation({
     mutationFn: authMutations.signIn,
     onSuccess: (data) => {
-      // Invalidate and refetch auth-related queries
+     
       queryClient.invalidateQueries({ queryKey: authQueryKeys.all })
       queryClient.setQueryData(authQueryKeys.currentUser(), data.user)
       
@@ -50,12 +50,12 @@ export const useLogoutMutation = () => {
   return useMutation({
     mutationFn: authMutations.logout,
     onSuccess: () => {
-      // Clear all cached data
+     
       queryClient.clear()
       toast.success('Déconnexion réussie!')
     },
     onError: (error: Error) => {
-      // Even if logout fails, clear local state
+  
       queryClient.clear()
       toast.error(error.message || 'Erreur lors de la déconnexion')
     },

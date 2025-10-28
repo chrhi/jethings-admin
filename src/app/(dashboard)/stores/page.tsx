@@ -3,10 +3,10 @@
 import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { DataTable, createColumns, StoreStatsComponent } from "@/features/stores"
+import { DataTable, createColumns } from "@/features/stores"
 import { useStoresQuery, useUpdateStoreMutation, useDeleteStoreMutation } from "@/features/stores/hooks"
 import {  Store as Tstore } from "@/features/stores/types"
-import { Plus, RefreshCw, Search, Filter, Store } from "lucide-react"
+import { Search, Filter } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import toast from "react-hot-toast"
@@ -36,15 +36,18 @@ export default function StoresPage() {
   }
   
   const { data: storesData, isLoading, error, refetch } = useStoresQuery(filters)
+
+
+  console.log(storesData)
   const updateStoreMutation = useUpdateStoreMutation()
   const deleteStoreMutation = useDeleteStoreMutation()
   
-  const stores = storesData?.data || []
-  const pagination = storesData ? {
-    page: storesData.page,
-    limit: storesData.limit,
-    total: storesData.total,
-    totalPages: storesData.totalPages
+  const stores = storesData?.store || []
+  const pagination = storesData?.pagination ? {
+    page: storesData?.pagination.page,
+    limit: storesData?.pagination.limit,
+    total: storesData?.pagination.total,
+    totalPages: storesData?.pagination.totalPages
   } : null
 
   const stats = null
@@ -131,7 +134,7 @@ export default function StoresPage() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -141,20 +144,10 @@ export default function StoresPage() {
           </p>
         </div>
         
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualiser
-          </Button>
-          <Button onClick={handleCreateStore}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter un magasin
-          </Button>
-        </div>
+       
       </div>
 
-      {/* KPI Cards */}
-      <StoreStatsComponent stats={stats} loading={statsLoading} />
+    
    
       {/* Filters */}
       <Card>
@@ -208,29 +201,7 @@ export default function StoresPage() {
       </Card>
 
 
-      {/* Stores Table */}
-      {!isLoading && (!stores || stores.length === 0) ? (
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-12">
-              <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-                <Store className="h-12 w-12 text-muted-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Aucun magasin trouvé</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchQuery || statusFilter !== "all" || activeFilter !== "all" 
-                  ? "Aucun magasin ne correspond à vos critères de recherche."
-                  : "Il n'y a pas encore de magasins dans le système."
-                }
-              </p>
-              <Button onClick={handleCreateStore}>
-                <Plus className="h-4 w-4 mr-2" />
-                Créer le premier magasin
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
+     
         <Card className="border-none p-0">
           <CardContent className="p-0">
             <DataTable 
@@ -243,7 +214,7 @@ export default function StoresPage() {
             />
           </CardContent>
         </Card>
-      )}
+     
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

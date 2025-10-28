@@ -11,6 +11,8 @@ import {
   useAcceptInvitationMutation
 } from '@/features/auth/hooks';
 
+
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -21,8 +23,7 @@ interface AuthContextType {
   acceptInvitation: (data: AcceptInvitationData) => Promise<void>;
   logout: () => Promise<void>;
   getCurrentUser: () => Promise<User | null>;
-  isAdmin: boolean;
-  isSuperAdmin: boolean;
+
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -139,11 +140,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  // For client-side components that need to know auth status
-  // This is mainly used for UI state, not for protection
+
   const isAuthenticated = !!user;
-  const isAdmin = user?.roles?.includes('admin') || user?.roles?.includes('super_admin') || false;
-  const isSuperAdmin = user?.roles?.includes('super_admin') || false;
+
 
   const value: AuthContextType = {
     user,
@@ -155,8 +154,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     acceptInvitation,
     logout,
     getCurrentUser,
-    isAdmin,
-    isSuperAdmin,
+    
   };
 
   return (

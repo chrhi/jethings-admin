@@ -5,7 +5,7 @@ import { queryKeys } from './query-keys'
 import { StoreFilters } from './types'
 import toast from 'react-hot-toast'
 
-// Query hooks
+
 export const useStoresQuery = (filters: StoreFilters = {}) => {
   return useQuery({
     queryKey: queryKeys.stores.list(filters),
@@ -14,13 +14,7 @@ export const useStoresQuery = (filters: StoreFilters = {}) => {
   })
 }
 
-export const useMyStoresQuery = () => {
-  return useQuery({
-    queryKey: queryKeys.stores.my(),
-    queryFn: storesQueries.fetchMyStores,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  })
-}
+
 
 export const useStoreByIdQuery = (id: string) => {
   return useQuery({
@@ -31,22 +25,7 @@ export const useStoreByIdQuery = (id: string) => {
   })
 }
 
-// Mutation hooks
-export const useCreateStoreMutation = () => {
-  const queryClient = useQueryClient()
-  
-  return useMutation({
-    mutationFn: storesMutations.createStore,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.stores.lists() })
-      queryClient.invalidateQueries({ queryKey: queryKeys.stores.my() })
-      toast.success('Store created successfully')
-    },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create store')
-    },
-  })
-}
+
 
 export const useUpdateStoreMutation = () => {
   const queryClient = useQueryClient()

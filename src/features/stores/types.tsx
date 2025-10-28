@@ -1,3 +1,5 @@
+import { Store } from '@/types/store'
+
 // Re-export types from the main types file
 export type { 
   Store, 
