@@ -7,8 +7,8 @@ import { ConfirmationProvider } from "@/contexts/confirmation-context";
 import { ConfirmationModal } from "@/components/modals/confirmation-modal";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "./theme-provider";
-import { ErrorBoundary } from "./error-boundary";
-import { AccessAwareErrorBoundary } from "./access-aware-error-boundary";
+
+
 import { NetworkStatusBanner } from "./network-status-banner";
 
 interface ProvidersProps {
@@ -23,11 +23,11 @@ export default function Providers({ children }: ProvidersProps) {
           queries: {
             refetchOnWindowFocus: false,
             retry: 1,
-            // Add error handling
+           
             throwOnError: false,
           },
           mutations: {
-            // Add error handling
+          
             throwOnError: false,
           },
         },
@@ -35,14 +35,14 @@ export default function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <AccessAwareErrorBoundary>
+
       <QueryClientProvider client={queryClient}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
-          suppressHydrationWarning
+
         >
           <AuthProvider>
             <ConfirmationProvider>
@@ -77,6 +77,6 @@ export default function Providers({ children }: ProvidersProps) {
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>
-    </AccessAwareErrorBoundary>
+   
   );
 }

@@ -28,7 +28,7 @@ export function LogoutButton({
       router.push("/signin");
     } catch (error) {
       console.error("Logout error:", error);
-      // Even if logout fails, redirect to signin
+      
       router.push("/signin");
     } finally {
       setIsLoading(false);

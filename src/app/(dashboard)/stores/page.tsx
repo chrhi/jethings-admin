@@ -50,8 +50,7 @@ export default function StoresPage() {
     totalPages: storesData?.pagination.totalPages
   } : null
 
-  const stats = null
-  const statsLoading = false
+  
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
@@ -83,12 +82,7 @@ export default function StoresPage() {
     setActiveFilter("all")
   }
 
-  const handleCreateStore = () => {
-    toast('Fonctionnalité de création de magasin à implémenter', {
-      icon: '🏪',
-      duration: 3000
-    })
-  }
+ 
 
   const handleStoreUpdate = (store: Tstore) => {
     toast('Fonctionnalité de modification de magasin à implémenter', {
@@ -128,7 +122,7 @@ export default function StoresPage() {
   }
 
   const columns = createColumns(
-    handleStoreUpdate,
+
     handleStoreDelete,
     handleStatusChange
   )
