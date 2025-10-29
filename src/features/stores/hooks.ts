@@ -10,7 +10,7 @@ export const useStoresQuery = (filters: StoreFilters = {}) => {
   return useQuery({
     queryKey: queryKeys.stores.list(filters),
     queryFn: () => storesQueries.fetchStores(filters),
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes - same as other features
   })
 }
 

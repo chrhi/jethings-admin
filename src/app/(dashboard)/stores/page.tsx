@@ -1,14 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { DataTable, createColumns } from "@/features/stores"
+import { DataTable, createColumns, PaginationComponent } from "@/features/stores"
 import { useStoresQuery, useUpdateStoreMutation, useDeleteStoreMutation } from "@/features/stores/hooks"
-import {  Store as Tstore } from "@/features/stores/types"
-import { Search, Filter } from "lucide-react"
+import { Store as Tstore, StoreFilters } from "@/features/stores/types"
+import { Search, RefreshCw } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import toast from "react-hot-toast"
 import {
   AlertDialog,
@@ -23,54 +22,41 @@ import {
 
 export default function StoresPage() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [activeFilter, setActiveFilter] = useState<string>("all")
   const [selectedStore, setSelectedStore] = useState<Tstore | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [page, setPage] = useState(1)
+  const [limit, setLimit] = useState(10)
 
   
-  const filters = {
+  // Memoize filters to ensure React Query detects changes properly
+  const filters: StoreFilters = useMemo(() => ({
     search: searchQuery || undefined,
-    status: statusFilter !== "all" ? [statusFilter as any] : undefined,
-    isActive: activeFilter !== "all" ? activeFilter === "true" : undefined,
-  }
+    page,
+    limit,
+  }), [searchQuery, page, limit])
   
   const { data: storesData, isLoading, error, refetch } = useStoresQuery(filters)
 
-
-  console.log(storesData)
   const updateStoreMutation = useUpdateStoreMutation()
   const deleteStoreMutation = useDeleteStoreMutation()
   
   const stores = storesData?.store || []
-  const pagination = storesData?.pagination ? {
-    page: storesData?.pagination.page,
-    limit: storesData?.pagination.limit,
-    total: storesData?.pagination.total,
-    totalPages: storesData?.pagination.totalPages
-  } : null
+  const pagination = storesData?.pagination || null
 
-  const stats = null
-  const statsLoading = false
+  
 
   const handleSearch = (value: string) => {
     setSearchQuery(value)
+    setPage(1) 
   }
 
-  const handleStatusFilter = (value: string) => {
-    setStatusFilter(value)
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage)
   }
 
-  const handleActiveFilter = (value: string) => {
-    setActiveFilter(value)
-  }
-
-  const handlePageChange = (page: number) => {
-    // React Query will automatically refetch when filters change
-  }
-
-  const handleLimitChange = (limit: number) => {
-    // React Query will automatically refetch when filters change
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit)
+    setPage(1) 
   }
 
   const handleRefresh = () => {
@@ -79,23 +65,11 @@ export default function StoresPage() {
 
   const resetFilters = () => {
     setSearchQuery("")
-    setStatusFilter("all")
-    setActiveFilter("all")
+    setPage(1) 
   }
 
-  const handleCreateStore = () => {
-    toast('Fonctionnalité de création de magasin à implémenter', {
-      icon: '🏪',
-      duration: 3000
-    })
-  }
+ 
 
-  const handleStoreUpdate = (store: Tstore) => {
-    toast('Fonctionnalité de modification de magasin à implémenter', {
-      icon: '✏️',
-      duration: 3000
-    })
-  }
 
   const handleStatusChange = async (store: Tstore, status: 'accepted' | 'rejected') => {
     try {
@@ -128,7 +102,7 @@ export default function StoresPage() {
   }
 
   const columns = createColumns(
-    handleStoreUpdate,
+
     handleStoreDelete,
     handleStatusChange
   )
@@ -144,7 +118,12 @@ export default function StoresPage() {
           </p>
         </div>
         
-       
+        <div className="flex items-center space-x-2">
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            Actualiser
+          </Button>
+        </div>
       </div>
 
     
@@ -165,37 +144,15 @@ export default function StoresPage() {
               </div>
             </div>
             
-            <Select value={statusFilter} onValueChange={handleStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="pending">En attente</SelectItem>
-                <SelectItem value="accepted">Accepté</SelectItem>
-                <SelectItem value="rejected">Rejeté</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={activeFilter} onValueChange={handleActiveFilter}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Actif" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="true">Actif</SelectItem>
-                <SelectItem value="false">Inactif</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Button 
-              variant="outline" 
-              onClick={resetFilters}
-              className="w-full sm:w-auto"
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Réinitialiser
-            </Button>
+            {searchQuery && (
+              <Button 
+                variant="outline" 
+                onClick={resetFilters}
+                className="w-full sm:w-auto"
+              >
+                Réinitialiser
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -208,12 +165,21 @@ export default function StoresPage() {
               columns={columns} 
               data={stores || []} 
               loading={isLoading}
-              pagination={pagination}
-              onPageChange={handlePageChange}
-              onLimitChange={handleLimitChange}
             />
           </CardContent>
         </Card>
+
+        {/* Pagination */}
+        {pagination && (
+          <div className="mt-4">
+            <PaginationComponent
+              pagination={pagination}
+              onPageChange={handlePageChange}
+              onLimitChange={handleLimitChange}
+              loading={isLoading}
+            />
+          </div>
+        )}
      
 
       {/* Delete Confirmation Dialog */}

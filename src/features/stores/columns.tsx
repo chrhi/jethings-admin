@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Store, StoreWithUser } from "./types"
+import { Store } from "./types"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { Store as StoreIcon, User, Calendar, Shield } from "lucide-react"
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export const createColumns = (
-  onStoreUpdate?: (store: Store) => void,
+
   onStoreDelete?: (store: Store) => void,
   onStatusChange?: (store: Store, status: 'accepted' | 'rejected') => void
 ): ColumnDef<Store>[] => [
@@ -28,17 +28,11 @@ export const createColumns = (
       const store = row.original
       return (
         <div className="flex items-center space-x-3">
-          {store.icon ? (
-            <img 
-              src={store.icon} 
-              alt={store.name}
-              className="h-8 w-8 rounded-md object-cover"
-            />
-          ) : (
+         
             <div className="h-8 w-8 rounded-md bg-muted flex items-center justify-center">
               <StoreIcon className="h-4 w-4 text-muted-foreground" />
             </div>
-          )}
+       
           <div className="space-y-1">
             <div className="font-medium">{store.name}</div>
             {store.description && (
@@ -51,21 +45,7 @@ export const createColumns = (
       )
     },
   },
-  {
-    accessorKey: "userId",
-    header: "Propriétaire",
-    cell: ({ row }) => {
-      const store = row.original as StoreWithUser
-      return (
-        <div className="flex items-center space-x-2">
-          <User className="h-4 w-4 text-muted-foreground" />
-          <div className="text-sm">
-            {store.user?.name || `User ${store.userId.slice(0, 8)}...`}
-          </div>
-        </div>
-      )
-    },
-  },
+ 
   {
     accessorKey: "status",
     header: "Statut",
@@ -129,10 +109,7 @@ export const createColumns = (
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onStoreUpdate?.(store)}>
-              <Edit className="mr-2 h-4 w-4" />
-              Modifier
-            </DropdownMenuItem>
+            
             {store.status === 'pending' && (
               <>
                 <DropdownMenuSeparator />
