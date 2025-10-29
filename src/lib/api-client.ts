@@ -77,10 +77,21 @@ class ApiClient {
         const newAccessToken = response.headers.get('x-new-access-token')
         const newRefreshToken = response.headers.get('x-new-refresh-token')
 
-        if (newAccessToken) setCookie('accessToken', newAccessToken)
-        if (newRefreshToken) setCookie('refreshToken', newRefreshToken)
+        if (newAccessToken) {
+          setCookie('accessToken', newAccessToken, 7) // 7 days for access token
+          // Verify it was stored
+          const verifyAccessToken = getCookie('accessToken')
+          console.log('[API Client] ✅ New access token stored', verifyAccessToken ? '✓ Verified' : '✗ Failed to verify')
+        }
+        if (newRefreshToken) {
+          setCookie('refreshToken', newRefreshToken, 30) // 30 days for refresh token
+          // Verify it was stored
+          const verifyRefreshToken = getCookie('refreshToken')
+          console.log('[API Client] ✅ New refresh token stored', verifyRefreshToken ? '✓ Verified' : '✗ Failed to verify')
+          console.log('[API Client] Refresh token value matches:', verifyRefreshToken === newRefreshToken ? '✓ Yes' : '✗ No')
+        }
 
-        console.log('[API Client] Tokens refreshed and stored.')
+        console.log('[API Client] Tokens refreshed and stored successfully.')
       }
 
       if (!response.ok) {

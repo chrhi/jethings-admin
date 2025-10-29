@@ -9,7 +9,7 @@ export const storesMutations = {
 
   // Update store
   updateStore: async (id: string, data: any): Promise<Store> => {
-    return apiClient.patch<Store>(`/stores/${id}`, data)
+    return apiClient.put<Store>(`/stores/${id}`, data)
   },
 
   // Delete store
